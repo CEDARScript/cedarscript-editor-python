@@ -3,13 +3,14 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "cedarscript_editor"
-version = "0.1.0"
+name = "cedarscript-editor"
+version = "0.1.1"
 description = "A library for executing CEDARScript, a SQL-like language for code analysis and transformations"
 readme = "README.md"
 authors = [{ name = "Elifarley", email = "elifarley@example.com" }]
 license = { file = "LICENSE" }
 classifiers = [
+    "Development Status :: 3 - Alpha",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.12",
     "License :: OSI Approved :: MIT License",
@@ -38,6 +39,9 @@ dev = [
     "black>=22.0",
     "isort>=5.0",
     "flake8>=4.0",
+    "mypy>=0.900",
+    "coverage>=6.0",
+    "tox>=3.24",
 ]
 
 [tool.setuptools]
@@ -46,6 +50,24 @@ include-package-data = true
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["cedarscript_editor*"]
-include = ["text_editor*"]
+include = ["cedarscript_editor*", "text_editor*"]
 exclude = ["cedarscript_editor.tests*"]
+
+[tool.black]
+line-length = 100
+target-version = ['py310', 'py311', 'py312']
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.mypy]
+ignore_missing_imports = true
+strict = true
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q"
+testpaths = [
+    "tests",
+]
