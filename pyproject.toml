@@ -48,10 +48,11 @@ dev = [
 package-dir = {"" = "src"}
 include-package-data = true
 
-[tool.setuptools.packages.find]
-where = ["src"]
-include = ["cedarscript_editor*", "text_editor*"]
-exclude = ["cedarscript_editor.tests*"]
+[tool.setuptools.packages]
+find = {}
+
+[tool.setuptools.package-data]
+"*" = ["*.txt", "*.rst"]
 
 [tool.black]
 line-length = 100
