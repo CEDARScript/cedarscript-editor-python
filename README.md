@@ -1,6 +1,6 @@
 # CEDARScript Editor (Python)
 
-[![PyPI version](https://badge.fury.io/py/cedarscript-editor-python.svg)](https://pypi.org/project/cedarscript-editor/)
+[![PyPI version](https://badge.fury.io/py/cedarscript-editor.svg)](https://pypi.org/project/cedarscript-editor/)
 [![Python Versions](https://img.shields.io/pypi/pyversions/cedarscript-editor.svg)](https://pypi.org/project/cedarscript-editor/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
