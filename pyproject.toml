@@ -23,7 +23,7 @@ classifiers = [
 ]
 keywords = ["cedarscript", "code-editing", "refactoring", "code-analysis", "sql-like", "ai-assisted-development"]
 dependencies = [
-    "cedarscript-ast-parser>=0.1.4",
+    "cedarscript-ast-parser>=0.1.5",
 ]
 requires-python = ">=3.12"
 
