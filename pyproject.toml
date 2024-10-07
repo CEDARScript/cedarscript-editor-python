@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cedarscript_editor"
-version = "0.1.2"
+version = "0.1.4"
 description = "A library for executing CEDARScript, a SQL-like language for code analysis and transformations"
 readme = "README.md"
 authors = [{ name = "Elifarley", email = "elifarley@example.com" }]
@@ -58,7 +58,7 @@ namespaces = false
 
 [tool.black]
 line-length = 100
-target-version = ['py310', 'py311', 'py312']
+target-version = ['py312']
 
 [tool.isort]
 profile = "black"

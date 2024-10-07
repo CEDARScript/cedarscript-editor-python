@@ -1,5 +1,5 @@
-from .cedar_editor_java import JavaCedarEditor
-from .cedar_editor_kotlin import KotlinCedarEditor
-from .cedar_editor_python import PythonCedarEditor
+from cedarscript_editor.cedarscript_editor_java import JavaCEDARScriptEditor
+from cedarscript_editor.cedarscript_editor_kotlin import KotlinCEDARScriptEditor
+from cedarscript_editor.cedarscript_editor_python import PythonCEDARScriptEditor
 
-__all__ = ["JavaCedarEditor", "KotlinCedarEditor", "PythonCedarEditor"]
+__all__ = ["JavaCEDARScriptEditor", "KotlinCEDARScriptEditor", "PythonCEDARScriptEditor"]

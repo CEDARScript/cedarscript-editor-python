@@ -1,4 +1,4 @@
-from .cedar_editor_base import CedarEditorBase, FunctionBoundaries
+from .cedarscript_editor_base import CEDARScriptEditorBase, FunctionBoundaries
 import rope.base.project
 from rope.base import libutils, ast
 
@@ -10,7 +10,7 @@ def get_by_offset(obj: list, offset: int):
         return obj[offset]
     return None
 
-class PythonCedarEditor(CedarEditorBase):
+class PythonCEDARScriptEditor(CEDARScriptEditorBase):
     """
     A class to handle Python code editing operations.
     """

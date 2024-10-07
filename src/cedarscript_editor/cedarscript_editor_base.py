@@ -8,7 +8,7 @@ from .text_editor_kit import \
     normalize_indent, write_file, read_file, bow_to_search_range, \
     FunctionBoundaries, SearchRange, analyze_indentation, IndentationInfo
 
-class CedarEditorException(Exception):
+class CEDARScriptEditorException(Exception):
     def __init__(self, command_ordinal: int, description: str):
         match command_ordinal:
             case 0 | 1:
@@ -51,7 +51,7 @@ class CedarEditorException(Exception):
         )
 
 
-class CedarEditorBase(ABC):
+class CEDARScriptEditorBase(ABC):
     def __init__(self, root_path):
         self.root_path = os.path.abspath(root_path)
         print(f'[{self.__class__}] root: {self.root_path}')
@@ -87,7 +87,7 @@ class CedarEditorBase(ABC):
                 print(f'[apply_commands] (command #{i+1}) Failed: {command}')
                 if isinstance(command, UpdateCommand):
                     print(f'CMD CONTENT: ***{command.content}***')
-                raise CedarEditorException(i+1, str(e)) from e
+                raise CEDARScriptEditorException(i + 1, str(e)) from e
         return result
 
     def _update_command(self, cmd: UpdateCommand):

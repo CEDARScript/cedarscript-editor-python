@@ -1,8 +1,8 @@
 import re
 import os
-from .cedar_editor_base import CedarEditorBase
+from .cedarscript_editor_base import CEDARScriptEditorBase
 
-class JavaCedarEditor(CedarEditorBase):
+class JavaCEDARScriptEditor(CEDARScriptEditorBase):
     def _find_function(self, lines, function_name):
         # Java method pattern: [modifiers] [return type] methodName(
         pattern = re.compile(rf'^\s*(public|protected|private|static|\s) +[\w<>\[\]]+\s+{re.escape(function_name)}\s*\(')

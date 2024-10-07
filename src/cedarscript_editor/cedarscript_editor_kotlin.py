@@ -1,7 +1,7 @@
 import re
-from .cedar_editor_base import CedarEditorBase
+from .cedarscript_editor_base import CEDARScriptEditorBase
 
-class KotlinCedarEditor(CedarEditorBase):
+class KotlinCEDARScriptEditor(CEDARScriptEditorBase):
     def _find_function(self, lines, function_name):
         pattern = re.compile(rf'^\s*fun\s+{re.escape(function_name)}\s*[\(<]')
         for i, line in enumerate(lines):
