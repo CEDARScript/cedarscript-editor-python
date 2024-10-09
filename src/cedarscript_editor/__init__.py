@@ -1,7 +1,6 @@
-from .cedarscript_editor_java import JavaCEDARScriptEditor
-from .cedarscript_editor_kotlin import KotlinCEDARScriptEditor
-from .cedarscript_editor_python import PythonCEDARScriptEditor
+from cedarscript_editor.cedarscript_editor import CEDARScriptEditor
 
-__version__ = "0.1.10"
+__version__ = "0.2.0"
 
-__all__ = ["PythonCEDARScriptEditor"]
+__all__ = ["CEDARScriptEditor"]
+

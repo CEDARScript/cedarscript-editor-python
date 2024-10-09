@@ -54,7 +54,7 @@ version = {attr = "cedarscript_editor.__version__"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["cedarscript_editor*", "text_editor*"]
+include = ["cedarscript_editor*", "text_editor*", "identifier_selector*", "*identifier_finder*"]
 namespaces = false
 
 [tool.setuptools.package-data]
