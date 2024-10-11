@@ -1,17 +1,17 @@
 import os
-from typing import Callable
 from collections.abc import Sequence
+from typing import Callable
 
-from cedarscript_ast_parser import Command, CreateCommand, RmFileCommand, MvFileCommand, UpdateCommand, \
+from cedarscript_ast_parser import Command, RmFileCommand, MvFileCommand, UpdateCommand, \
     SelectCommand, IdentifierFromFile, Segment, Marker, MoveClause, DeleteClause, \
     InsertClause, ReplaceClause, EditingAction, BodyOrWhole, RegionClause, MarkerType
-from cedarscript_ast_parser.cedarscript_ast_parser import MarkerCompatible, RelativeMarker, RelativePositionType
+from cedarscript_ast_parser.cedarscript_ast_parser import MarkerCompatible, RelativeMarker, \
+    RelativePositionType
+from cedarscript_editor.indentation_kit import IndentationInfo
+from cedarscript_editor.range_spec import IdentifierBoundaries, RangeSpec
+from cedarscript_editor.text_editor_kit import read_file, write_file, bow_to_search_range
 
 from .identifier_selector import select_finder
-from .python_identifier_finder import find_python_identifier
-from .text_editor_kit import \
-    normalize_indent, write_file, read_file, bow_to_search_range, \
-    IdentifierBoundaries, RangeSpec, analyze_and_adjust_indentation, analyze_and_normalize_indentation, IndentationInfo
 
 
 class CEDARScriptEditorException(Exception):
@@ -28,12 +28,13 @@ class CEDARScriptEditorException(Exception):
                 items = f"{sequence} and #{command_ordinal - 1}"
         if command_ordinal <= 1:
             note = ''
-            plural_indicator=''
             previous_cmd_notes = ''
         else:
 
-            plural_indicator='s'
-            previous_cmd_notes = f", bearing in mind the file was updated and now contains all changes expressed in command{plural_indicator} {items}"
+            previous_cmd_notes = (
+                f", bearing in mind the file was updated and now contains all changes expressed in "
+                f"commands {items}"
+            )
             if 'syntax' in description.casefold():
                 probability_indicator = "most probably"
             else:
@@ -80,8 +81,8 @@ class CEDARScriptEditor:
                 match command:
                     case UpdateCommand() as cmd:
                         result.append(self._update_command(cmd))
-                    case CreateCommand() as cmd:
-                        result.append(self._create_command(cmd))
+                    # case CreateCommand() as cmd:
+                    #     result.append(self._create_command(cmd))
                     case RmFileCommand() as cmd:
                         result.append(self._rm_command(cmd))
                     case MvFileCommand() as cmd:
@@ -148,8 +149,8 @@ class CEDARScriptEditor:
 
         source_info: tuple[str, str | Sequence[str]] = (file_path, src)
 
-        def identifier_resolver(marker: Marker):
-            return self.find_identifier(source_info, marker)
+        def identifier_resolver(m: Marker):
+            return self.find_identifier(source_info, m)
 
         # Set range_spec to cover the identifier
         search_range = restrict_search_range(action, target, identifier_resolver)
@@ -167,10 +168,9 @@ class CEDARScriptEditor:
                     region, action, lines, search_range, identifier_resolver
                 )
                 content = content_range.read(lines)
-                content = analyze_and_adjust_indentation(
-                    src_content_to_adjust=content,
-                    target_context_for_analysis=lines,
-                    base_indentation_count=dest_indent + (relindent or 0)
+                count = dest_indent + (relindent or 0)
+                content = IndentationInfo.from_content(lines).shift_indentation(
+                    content, count
                 )
             case str() | [str(), *_] | (str(), *_):
                 pass
@@ -191,10 +191,10 @@ class CEDARScriptEditor:
                 saved_content = range_spec.delete(lines)
                 # TODO Move from 'lines' to the same file or to 'other_file'
                 dest_range = self._get_index_range(InsertClause(insert_position), lines)
-                saved_content = analyze_and_adjust_indentation(
-                    src_content_to_adjust=saved_content,
-                    target_context_for_analysis=lines,
-                    base_indentation_count= dest_range.indent + (relindent or 0)
+                count = dest_range.indent + (relindent or 0)
+                saved_content = (
+                    IndentationInfo.from_content(lines).
+                    shift_indentation(saved_content, count)
                 )
                 dest_range.write(saved_content, lines)
 
@@ -202,11 +202,10 @@ class CEDARScriptEditor:
                 range_spec.delete(lines)
 
             case ReplaceClause() | InsertClause():
-                content = analyze_and_normalize_indentation(
-                    src_content_to_adjust=content,
-                    target_context_for_analysis=lines,
-                    context_indent_count=range_spec.indent
+                content = IndentationInfo.from_content(lines).apply_relative_indents(
+                    content, range_spec.indent
                 )
+
                 range_spec.write(content, lines)
 
             case _ as invalid:
@@ -250,7 +249,7 @@ class CEDARScriptEditor:
                                 pass
                             case _:
                                 # TODO transform to RangeSpec
-                                mos = self.find_identifier(lines, f'for:{region}', mos).body
+                                mos = self.find_identifier(("find_index_range_for_region", lines), mos).body
                 index_range = mos.to_search_range(
                     lines,
                     search_range.start if search_range else 0,

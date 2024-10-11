@@ -3,7 +3,8 @@ from cedarscript_ast_parser import Marker, MarkerType
 from rope.base import ast, libutils
 from collections.abc import Sequence
 
-from cedarscript_editor.text_editor_kit import IdentifierBoundaries, RangeSpec, get_line_indent_count
+from cedarscript_editor.range_spec import IdentifierBoundaries, RangeSpec
+from cedarscript_editor.indentation_kit import get_line_indent_count
 
 
 def get_by_offset(obj: Sequence, offset: int):
@@ -19,8 +20,10 @@ def find_python_identifier(root_path: str, file_name: str, source: str, marker: 
     :param root_path:
     :param file_name:
     :param source: Source code.
-    :param marker: Type, name and offset of the identifier to find. TODO: If `None` when there are 2 or more identifiers with the same name, raise exception.
-    :return: IdentifierBoundaries with identifier start, body start, and end lines of the identifier or None if not found.
+    :param marker: Type, name and offset of the identifier to find.
+    TODO: If `None` when there are 2 or more identifiers with the same name, raise exception.
+    :return: IdentifierBoundaries with identifier start, body start, and end lines of the identifier
+    or None if not found.
     """
     project = rope.base.project.Project(root_path)
     resource = libutils.path_to_resource(project, file_name)
