@@ -47,14 +47,15 @@ dev = [
 
 [tool.setuptools]
 package-dir = {"" = "src"}
-py-modules = ["cedarscript_editor"]
+py-modules = ["cedarscript_editor", "text_manipulaiton"]
 
 [tool.setuptools.dynamic]
 version = {attr = "cedarscript_editor.__version__"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["cedarscript_editor*", "text_editor*", "identifier_selector*", "*identifier_finder*"]
+include = ["cedarscript_editor*", "text_editor*", "identifier_selector*", "*identifier_finder*",
+"indentation_*", "range_*"]
 namespaces = false
 
 [tool.setuptools.package-data]

@@ -3,7 +3,7 @@ from collections.abc import Sequence
 from typing import NamedTuple
 
 from cedarscript_ast_parser import Marker, RelativeMarker, RelativePositionType, MarkerType, BodyOrWhole
-from cedarscript_editor.indentation_kit import get_line_indent_count
+from text_manipulation.indentation_kit import get_line_indent_count
 
 MATCH_TYPES = ('exact', 'stripped', 'normalized', 'partial')
 

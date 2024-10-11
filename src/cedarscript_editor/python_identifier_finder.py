@@ -3,8 +3,8 @@ from cedarscript_ast_parser import Marker, MarkerType
 from rope.base import ast, libutils
 from collections.abc import Sequence
 
-from cedarscript_editor.range_spec import IdentifierBoundaries, RangeSpec
-from cedarscript_editor.indentation_kit import get_line_indent_count
+from text_manipulation.range_spec import IdentifierBoundaries, RangeSpec
+from text_manipulation.indentation_kit import get_line_indent_count
 
 
 def get_by_offset(obj: Sequence, offset: int):

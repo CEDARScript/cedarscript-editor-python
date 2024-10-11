@@ -7,9 +7,9 @@ from cedarscript_ast_parser import Command, RmFileCommand, MvFileCommand, Update
     InsertClause, ReplaceClause, EditingAction, BodyOrWhole, RegionClause, MarkerType
 from cedarscript_ast_parser.cedarscript_ast_parser import MarkerCompatible, RelativeMarker, \
     RelativePositionType
-from cedarscript_editor.indentation_kit import IndentationInfo
-from cedarscript_editor.range_spec import IdentifierBoundaries, RangeSpec
-from cedarscript_editor.text_editor_kit import read_file, write_file, bow_to_search_range
+from text_manipulation.indentation_kit import IndentationInfo
+from text_manipulation.range_spec import IdentifierBoundaries, RangeSpec
+from text_manipulation.text_editor_kit import read_file, write_file, bow_to_search_range
 
 from .identifier_selector import select_finder
 

@@ -5,7 +5,7 @@ from cedarscript_ast_parser import Marker
 import logging
 
 from cedarscript_editor.python_identifier_finder import find_python_identifier
-from cedarscript_editor.range_spec import IdentifierBoundaries
+from text_manipulation.range_spec import IdentifierBoundaries
 
 _log = logging.getLogger(__name__)
 
