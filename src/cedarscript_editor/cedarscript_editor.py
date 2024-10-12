@@ -152,8 +152,20 @@ class CEDARScriptEditor:
         def identifier_resolver(m: Marker):
             return self.find_identifier(source_info, m)
 
-        # Set range_spec to cover the identifier
-        search_range = restrict_search_range(action, target, identifier_resolver)
+        match action:
+            case MoveClause():
+                # (Check parse_update_command)
+                # when action=MoveClause example (MOVE roll TO AFTER score):
+                #   action.deleteclause.region=WHOLE
+                #   action.as_marker = action.insertclause.as_marker
+                #   action.insertclause.insert_position=FUNCTION(score)
+                #   target.as_marker = FUNCTION(roll) (the one to delete)
+                search_range = RangeSpec.EMPTY
+                move_src_range = restrict_search_range(action, target, identifier_resolver)
+            case _:
+                move_src_range = None
+                # Set range_spec to cover the identifier
+                search_range = restrict_search_range(action, target, identifier_resolver)
 
         marker, search_range = find_marker_or_segment(action, lines, search_range)
 
@@ -162,6 +174,8 @@ class CEDARScriptEditor:
         )
 
         match content:
+            case str() | [str(), *_] | (str(), *_):
+                pass
             case (region, relindent):
                 dest_indent = search_range.indent
                 content_range = restrict_search_range_for_marker(
@@ -169,14 +183,24 @@ class CEDARScriptEditor:
                 )
                 content = content_range.read(lines)
                 count = dest_indent + (relindent or 0)
+                # TODO IndentationInfo.from_content(content) ?
                 content = IndentationInfo.from_content(lines).shift_indentation(
                     content, count
                 )
-            case str() | [str(), *_] | (str(), *_):
-                pass
             case _:
-                raise ValueError(f'Invalid content: {content}')
-
+                match action:
+                    case MoveClause(insert_position=region, relative_indentation=relindent):
+                        dest_range = restrict_search_range_for_marker(
+                            region, action, lines, RangeSpec.EMPTY, identifier_resolver
+                        )
+                        dest_indent = dest_range.indent
+                        content = move_src_range.read(lines)
+                        count = dest_indent + (relindent or 0)
+                        content = IndentationInfo.from_content(content).shift_indentation(
+                            content, count
+                        )
+                    case _:
+                        raise ValueError(f'Invalid content: {content}')
 
         self._apply_action(action, lines, search_range, content)
 
@@ -188,15 +212,8 @@ class CEDARScriptEditor:
         match action:
 
             case MoveClause(insert_position=insert_position, to_other_file=other_file, relative_indentation=relindent):
-                saved_content = range_spec.delete(lines)
                 # TODO Move from 'lines' to the same file or to 'other_file'
-                dest_range = self._get_index_range(InsertClause(insert_position), lines)
-                count = dest_range.indent + (relindent or 0)
-                saved_content = (
-                    IndentationInfo.from_content(lines).
-                    shift_indentation(saved_content, count)
-                )
-                dest_range.write(saved_content, lines)
+                range_spec.write(content, lines)
 
             case DeleteClause():
                 range_spec.delete(lines)
