@@ -179,14 +179,14 @@ class CEDARScriptEditor:
             case (region, relindent):
                 dest_indent = search_range.indent
                 content_range = restrict_search_range_for_marker(
-                    region, action, lines, search_range, identifier_resolver
+                    region, action, lines, RangeSpec.EMPTY, identifier_resolver
                 )
                 content = content_range.read(lines)
                 count = dest_indent + (relindent or 0)
-                # TODO IndentationInfo.from_content(content) ?
-                content = IndentationInfo.from_content(lines).shift_indentation(
+                content = IndentationInfo.from_content(content).shift_indentation(
                     content, count
                 )
+                content = (region, content)
             case _:
                 match action:
                     case MoveClause(insert_position=region, relative_indentation=relindent):
@@ -219,9 +219,13 @@ class CEDARScriptEditor:
                 range_spec.delete(lines)
 
             case ReplaceClause() | InsertClause():
-                content = IndentationInfo.from_content(lines).apply_relative_indents(
-                    content, range_spec.indent
-                )
+                match content:
+                    case (region, processed_content):
+                        content = processed_content
+                    case str():
+                        content = IndentationInfo.from_content(lines).apply_relative_indents(
+                            content, range_spec.indent
+                        )
 
                 range_spec.write(content, lines)
 
