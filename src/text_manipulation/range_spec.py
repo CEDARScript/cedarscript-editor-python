@@ -106,8 +106,14 @@ class RangeSpec(NamedTuple):
         if search_end_index < 0:
             search_end_index = len(lines)
 
-        assert search_start_index < len(lines), f"search start index ({search_start_index}) must be less than line count ({len(lines)})"
-        assert search_end_index <= len(lines), f"search end index ({search_end_index}) must be less than or equal to line count ({len(lines)})"
+        assert search_start_index < len(lines), (
+            f"search start index ({search_start_index}) "
+            f"must be less than line count ({len(lines)})"
+        )
+        assert search_end_index <= len(lines), (
+            f"search end index ({search_end_index}) "
+            f"must be less than or equal to line count ({len(lines)})"
+        )
 
         for i in range(search_start_index, search_end_index):
             line = lines[i]

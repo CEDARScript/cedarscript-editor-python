@@ -38,20 +38,23 @@ class CEDARScriptEditorException(Exception):
             if 'syntax' in description.casefold():
                 probability_indicator = "most probably"
             else:
-                probability_indicator= "might have"
+                probability_indicator = "might have"
 
             note = (
-                f"<note>*ALL* commands *before* command #{command_ordinal} were applied and *their changes are already committed*. "
+                f"<note>*ALL* commands *before* command #{command_ordinal} "
+                "were applied and *their changes are already committed*. "
                 f"Re-read the file to catch up with the applied changes."
-                f"ATTENTION: The previous command (#{command_ordinal - 1}) {probability_indicator} caused command #{command_ordinal} to fail "
+                f"ATTENTION: The previous command (#{command_ordinal - 1}) {probability_indicator} "
+                f"caused command #{command_ordinal} to fail "
                 f"due to changes that left the file in an invalid state (check that by re-analyzing the file!)</note>"
             )
         super().__init__(
             f"<error-details><error-location>COMMAND #{command_ordinal}</error-location>{note}"
             f"<description>{description}</description>"
-            "<suggestion>NEVER apologize; just relax, take a deep breath, think step-by-step and write an in-depth analysis of what went wrong "
-            "(specifying which command ordinal failed), then acknowledge which commands were already applied and concisely describe the state at which the file was left "
-            "(saying what needs to be done now), "
+            "<suggestion>NEVER apologize; just relax, take a deep breath, think step-by-step and write "
+            "an in-depth analysis of what went wrong (specifying which command ordinal failed), "
+            "then acknowledge which commands were already applied and concisely describe "
+            "the state at which the file was left (saying what needs to be done now), "
             f"then write new commands that will fix the problem{previous_cmd_notes} "
             "(you'll get a one-million dollar tip if you get it right!) "
             "Use descriptive comment before each command.</suggestion></error-details>"
@@ -85,9 +88,9 @@ class CEDARScriptEditor:
                     #     result.append(self._create_command(cmd))
                     case RmFileCommand() as cmd:
                         result.append(self._rm_command(cmd))
-                    case MvFileCommand() as cmd:
+                    case MvFileCommand():
                         raise ValueError('Noy implemented: MV')
-                    case SelectCommand() as cmd:
+                    case SelectCommand():
                         raise ValueError('Noy implemented: SELECT')
                     case _ as invalid:
                         raise ValueError(f"Unknown command '{type(invalid)}'")
@@ -208,7 +211,8 @@ class CEDARScriptEditor:
 
         return f"Updated {target if target else 'file'} in {file_path}\n  -> {action}"
 
-    def _apply_action(self, action: EditingAction, lines: Sequence[str], range_spec: RangeSpec, content: str | None = None):
+    @staticmethod
+    def _apply_action(action: EditingAction, lines: Sequence[str], range_spec: RangeSpec, content: str | None = None):
         match action:
 
             case MoveClause(insert_position=insert_position, to_other_file=other_file, relative_indentation=relindent):

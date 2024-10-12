@@ -1,4 +1,3 @@
-import re
 from collections import Counter
 from collections.abc import Sequence
 from math import gcd
@@ -225,7 +224,10 @@ class IndentationInfo(NamedTuple):
             if len(parts) == 2 and parts[0].startswith('@'):
                 relative_indent_level = int(parts[0][1:])
                 absolute_indent_level = context_indent_level + relative_indent_level
-                assert absolute_indent_level >= 0, f"Final indentation for line `{line.strip()}` cannot be negative ({absolute_indent_level})"
+                assert absolute_indent_level >= 0, (
+                    f"Final indentation for line `{line.strip()}` cannot be negative "
+                    f"({absolute_indent_level})"
+                )
                 lines[i] = self.level_to_chars(absolute_indent_level) + parts[1].lstrip()
             else:
                 absolute_indent_level = context_indent_level
