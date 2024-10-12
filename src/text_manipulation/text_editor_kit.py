@@ -22,7 +22,7 @@ def bow_to_search_range(bow: BodyOrWhole, searh_range: IdentifierBoundaries | Ra
     match searh_range:
 
         case RangeSpec() | None:
-            return searh_range or RangeSpec(0, -1, 0)
+            return searh_range or RangeSpec.EMPTY
 
         case IdentifierBoundaries():
             return searh_range.location_to_search_range(bow)
@@ -51,7 +51,7 @@ class MarkerOrSegmentProtocol(Protocol):
 def marker_or_segment_to_search_range_impl(
     self,
     lines: Sequence[str],
-    search_range: RangeSpec = RangeSpec(0, -1, 0)
+    search_range: RangeSpec = RangeSpec.EMPTY
 ) -> RangeSpec | None:
     match self:
         case Marker(type=MarkerType.LINE):
@@ -72,7 +72,7 @@ Segment.to_search_range = marker_or_segment_to_search_range_impl
 def segment_to_search_range(
         lines: Sequence[str],
         start_relpos: RelativeMarker, end_relpos: RelativeMarker,
-        search_range: RangeSpec = RangeSpec(0, -1, 0)
+        search_range: RangeSpec = RangeSpec.EMPTY
 ) -> RangeSpec:
     assert len(lines), "`lines` is empty"
 

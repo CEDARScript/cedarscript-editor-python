@@ -277,7 +277,7 @@ def find_marker_or_segment(action: EditingAction, lines: Sequence[str], search_r
 
 
 def restrict_search_range(action, target, identifier_resolver: Callable[[Marker], IdentifierBoundaries]) -> RangeSpec:
-    search_range = RangeSpec(0, -1, 0)
+    search_range = RangeSpec.EMPTY
     match target:
         case IdentifierFromFile() as identifier_from_file:
             identifier_marker = identifier_from_file.as_marker

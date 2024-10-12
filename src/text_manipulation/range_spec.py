@@ -154,6 +154,9 @@ class RangeSpec(NamedTuple):
         return None
 
 
+RangeSpec.EMPTY = RangeSpec(0, -1, 0)
+
+
 class IdentifierBoundaries(NamedTuple):
     whole: RangeSpec
     body: RangeSpec
