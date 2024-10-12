@@ -56,7 +56,11 @@ def marker_or_segment_to_search_range_impl(
     match self:
         case Marker(type=MarkerType.LINE):
             result = RangeSpec.from_line_marker(lines, self, search_range)
-            assert result is not None, f"Unable to find `{self}`; Try: 1) Double-checking the marker (maybe you specified the the wrong one); or 2) using *exactly* the same characters from source; or 3) using another marker"
+            assert result is not None, (
+                f"Unable to find `{self}`; Try: 1) Double-checking the marker "
+                f"(maybe you specified the the wrong one); or 2) using *exactly* the same characters from source; "
+                f"or 3) using another marker"
+            )
             # TODO check under which circumstances we should return a 1-line range instead of an empty range
             return result
         case Segment(start=s, end=e):
@@ -77,7 +81,11 @@ def segment_to_search_range(
     assert len(lines), "`lines` is empty"
 
     start_match_result = RangeSpec.from_line_marker(lines, start_relpos, search_range)
-    assert start_match_result, f"Unable to find segment start `{start_relpos}`; Try: 1) Double-checking the marker (maybe you specified the the wrong one); or 2) using *exactly* the same characters from source; or 3) using a marker from above"
+    assert start_match_result, (
+        f"Unable to find segment start `{start_relpos}`; Try: "
+        f"1) Double-checking the marker (maybe you specified the the wrong one); or "
+        f"2) using *exactly* the same characters from source; or 3) using a marker from above"
+    )
 
     start_index_for_end_marker = start_match_result.as_index
     if start_relpos.qualifier == RelativePositionType.AFTER:
