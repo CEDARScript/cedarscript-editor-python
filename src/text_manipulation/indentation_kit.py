@@ -4,8 +4,30 @@ from collections.abc import Sequence
 from math import gcd
 from typing import NamedTuple
 
+
 def get_line_indent_count(line: str):
     return len(line) - len(line.lstrip())
+
+
+def extract_indentation(line: str) -> str:
+    """
+    Extract the leading whitespace from a given line.
+
+    Args:
+        line (str): The input line to process.
+
+    Returns:
+        str: The leading whitespace of the line.
+
+    Examples:
+        >>> extract_indentation("    Hello")
+        '    '
+        >>> extract_indentation("\t\tWorld")
+        '\t\t'
+        >>> extract_indentation("No indentation")
+        ''
+    """
+    return line[:len(line) - len(line.lstrip())]
 
 
 class IndentationInfo(NamedTuple):
@@ -68,9 +90,6 @@ class IndentationInfo(NamedTuple):
         """
         # TODO Always send str?
         lines = [x.lstrip() for x in content.splitlines() if x.strip()] if isinstance(content, str) else content
-
-        def extract_indentation(line: str) -> str:
-            return re.match(r'^\s*', line).group(0)
 
         indentations = [extract_indentation(line) for line in lines if line.strip()]
 
