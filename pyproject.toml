@@ -1,16 +1,15 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+requires = ["setuptools>=61.0", "wheel", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "cedarscript-editor"
 dynamic = ["version"]
 description = "A library for executing CEDARScript, a SQL-like language for code analysis and transformations"
+authors = [{ name = "Elifarley", email = "cedarscript@orgecc.com" }]
 readme = "README.md"
-authors = [{ name = "Elifarley", email = "elifarley@example.com" }]
-license = { file = "LICENSE" }
+license = {text = "MIT"}
 classifiers = [
-    "Development Status :: 3 - Alpha",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.12",
     "License :: OSI Approved :: MIT License",
@@ -23,10 +22,10 @@ classifiers = [
 ]
 keywords = ["cedarscript", "code-editing", "refactoring", "code-analysis", "sql-like", "ai-assisted-development"]
 dependencies = [
-    "cedarscript-ast-parser>=0.2.2",
+    "cedarscript-ast-parser>=0.2.3",
     "rope>=1.13.0"
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.11"
 
 [project.urls]
 Homepage = "https://github.com/CEDARScript/cedarscript-editor-python"
@@ -47,15 +46,20 @@ dev = [
 
 [tool.setuptools]
 package-dir = {"" = "src"}
-py-modules = ["cedarscript_editor", "text_manipulaiton"]
 
-[tool.setuptools.dynamic]
-version = {attr = "cedarscript_editor.__version__"}
+[tool.setuptools_scm]
+# To override version:
+# >>> SETUPTOOLS_SCM_PRETEND_VERSION=0.0.2 python -m build
+# To dry-run and see version:
+# >>> python -m setuptools_scm
+write_to = "src/cedarscript_editor/_version.py"
+# Append .post{number of commits} to your version if there are commits after the last tag.
+version_scheme = "post-release"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["cedarscript_editor*", "text_editor*", "identifier_selector*", "*identifier_finder*",
-"indentation_*", "range_*"]
+include = ["cedarscript_editor*", "text_manipulaiton*"]
+exclude = ["cedarscript_ast_parser.tests*"]
 namespaces = false
 
 [tool.setuptools.package-data]
@@ -63,15 +67,17 @@ namespaces = false
 
 [tool.black]
 line-length = 100
-target-version = ['py312']
+target-version = ['py311']
 
 [tool.isort]
 profile = "black"
 line_length = 100
 
 [tool.mypy]
-ignore_missing_imports = true
+python_version = "3.11"
 strict = true
+warn_return_any = true
+warn_unused_configs = true
 
 [tool.pytest.ini_options]
 minversion = "6.0"
