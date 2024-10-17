@@ -1,16 +1,17 @@
 from collections.abc import Sequence
 from typing import Protocol, runtime_checkable
+from os import PathLike
 
 from cedarscript_ast_parser import Marker, RelativeMarker, RelativePositionType, Segment, MarkerType, BodyOrWhole
 from .range_spec import IdentifierBoundaries, RangeSpec
 
 
-def read_file(file_path: str) -> str:
+def read_file(file_path: str | PathLike) -> str:
     with open(file_path, 'r') as file:
         return file.read()
 
 
-def write_file(file_path: str, lines: Sequence[str]):
+def write_file(file_path: str | PathLike, lines: Sequence[str]):
     with open(file_path, 'w') as file:
         file.writelines([line + '\n' for line in lines])
 
@@ -90,8 +91,13 @@ def segment_to_search_range(
     start_index_for_end_marker = start_match_result.as_index
     if start_relpos.qualifier == RelativePositionType.AFTER:
         start_index_for_end_marker += -1
-    end_match_result = RangeSpec.from_line_marker(lines, end_relpos, RangeSpec(start_index_for_end_marker, search_range.end, start_match_result.indent))
-    assert end_match_result, f"Unable to find segment end `{end_relpos}` - Try: 1) using *exactly* the same characters from source; or 2) using a marker from below"
+    end_match_result = RangeSpec.from_line_marker(lines, end_relpos, RangeSpec(
+        start_index_for_end_marker, search_range.end, start_match_result.indent
+    ))
+    assert end_match_result, (
+        f"Unable to find segment end `{end_relpos}` - Try: "
+        f"1) using *exactly* the same characters from source; or 2) using a marker from below"
+    )
     if end_match_result.as_index > -1:
         one_after_end = end_match_result.as_index + 1
         end_match_result = RangeSpec(one_after_end, one_after_end, end_match_result.indent)

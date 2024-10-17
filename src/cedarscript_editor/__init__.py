@@ -1,12 +1,17 @@
 from ._version import __version__
 import re
 from .cedarscript_editor import CEDARScriptEditor
-from text_manipulation import IndentationInfo, IdentifierBoundaries, RangeSpec, read_file, write_file, bow_to_search_range
+from cedarscript_ast_parser import CEDARScriptASTParser
+from text_manipulation import (
+    IndentationInfo, IdentifierBoundaries, RangeSpec, read_file, write_file,
+    bow_to_search_range
+)
 
 __all__ = [
     "__version__", "find_commands", "CEDARScriptEditor", "IndentationInfo", "IdentifierBoundaries", "RangeSpec",
     "read_file", "write_file", "bow_to_search_range"
 ]
+
 
 def find_commands(content: str):
     # Regex pattern to match CEDARScript blocks

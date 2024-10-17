@@ -75,7 +75,7 @@ class RangeSpec(NamedTuple):
                 search_marker.value: The line to search for.
                 search_marker.offset: The number of matches to skip before returning a result.
                           0 skips no match and returns the first match, 1 returns the second match, and so on.
-            :param search_range: The index to start the search from. Defaults to 0. The index to end the search at (exclusive).
+            :param search_range: The index to start the search from and to end the search at (exclusive).
                                   Defaults to (0, -1), which means search to the end of the list.
 
         :returns:

@@ -215,7 +215,7 @@ class IndentationInfo(NamedTuple):
             AssertionError: If the calculated indentation level for any line is negative.
         """
         # TODO Always send str?
-        lines = [line.lstrip() for line in content.splitlines() if line.strip()] if isinstance(content, str) else content
+        lines = [l.lstrip() for l in content.splitlines() if l.strip()] if isinstance(content, str) else content
 
         context_indent_level = self.char_count_to_level(context_indent_count)
         for i in range(len(lines)):

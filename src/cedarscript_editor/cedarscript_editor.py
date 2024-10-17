@@ -121,7 +121,6 @@ class CEDARScriptEditor:
         #     content='\n @0:print("This line will be inserted at the top")\n '
         # )
 
-
         # Example 2:
         # UPDATE FUNCTION
         # FROM FILE "tmp.benchmarks/2024-10-04-22-59-58--CEDARScript-Gemini-small/bowling/bowling.py"
@@ -150,7 +149,7 @@ class CEDARScriptEditor:
         src = read_file(file_path)
         lines = src.splitlines()
 
-        source_info: tuple[str, str | Sequence[str]] = (file_path, src)
+        source_info: tuple[LiteralString | str | bytes, str | Sequence[str]] = (file_path, src)
 
         def identifier_resolver(m: Marker):
             return self.find_identifier(source_info, m)
@@ -239,7 +238,7 @@ class CEDARScriptEditor:
     def _rm_command(self, cmd: RmFileCommand):
         file_path = os.path.join(self.root_path, cmd.file_path)
 
-    def _delete_function(self, cmd): # TODO
+    def _delete_function(self, cmd):  # TODO
         file_path = os.path.join(self.root_path, cmd.file_path)
 
     # def _create_command(self, cmd: CreateCommand):
@@ -285,7 +284,9 @@ class CEDARScriptEditor:
         return index_range
 
 
-def find_marker_or_segment(action: EditingAction, lines: Sequence[str], search_range: RangeSpec) -> tuple[Marker, RangeSpec]:
+def find_marker_or_segment(
+        action: EditingAction, lines: Sequence[str], search_range: RangeSpec
+) -> tuple[Marker, RangeSpec]:
     marker: Marker | Segment | None = None
     match action:
         case MarkerCompatible() as marker_compatible:
