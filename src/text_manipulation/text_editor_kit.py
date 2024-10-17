@@ -2,7 +2,7 @@ from collections.abc import Sequence
 from typing import Protocol, runtime_checkable
 
 from cedarscript_ast_parser import Marker, RelativeMarker, RelativePositionType, Segment, MarkerType, BodyOrWhole
-from text_manipulation.range_spec import IdentifierBoundaries, RangeSpec
+from .range_spec import IdentifierBoundaries, RangeSpec
 
 
 def read_file(file_path: str) -> str:

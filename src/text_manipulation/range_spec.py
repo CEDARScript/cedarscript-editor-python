@@ -3,7 +3,7 @@ from collections.abc import Sequence
 from typing import NamedTuple
 
 from cedarscript_ast_parser import Marker, RelativeMarker, RelativePositionType, MarkerType, BodyOrWhole
-from text_manipulation.indentation_kit import get_line_indent_count
+from .indentation_kit import get_line_indent_count
 
 MATCH_TYPES = ('exact', 'stripped', 'normalized', 'partial')
 
@@ -36,13 +36,13 @@ class RangeSpec(NamedTuple):
     def dec(self, count: int = 1):
         return self._replace(start=self.start - count, end=self.end - count)
 
-    def read[S: Sequence[str]](self, src: S) -> S:
+    def read(self, src: Sequence[str]) -> Sequence[str]:
         return src[self.start:self.end]
 
-    def write[S: Sequence[str]](self, src: S, target: S):
+    def write(self, src: Sequence[str], target: Sequence[str]):
         target[self.start:self.end] = src
 
-    def delete[S: Sequence[str]](self, src: S) -> S:
+    def delete(self, src: Sequence[str]) -> Sequence[str]:
         result = self.read(src)
         del src[self.start:self.end]
         return result
@@ -52,12 +52,12 @@ class RangeSpec(NamedTuple):
         return re.sub(r'[^\w]', '.', line.strip(), flags=re.UNICODE)
 
     @classmethod
-    def from_line_marker[T: RangeSpec](
-            cls: T,
+    def from_line_marker(
+            cls,
             lines: Sequence[str],
             search_term: Marker,
             search_range: 'RangeSpec' = None
-    ) -> T | None:
+    ):
         """
         Find the index of a specified line within a list of strings, considering different match types and an offset.
 

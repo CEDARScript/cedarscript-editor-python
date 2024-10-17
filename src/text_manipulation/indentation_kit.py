@@ -67,7 +67,7 @@ class IndentationInfo(NamedTuple):
     message: str | None = None
 
     @classmethod
-    def from_content[T: IndentationInfo, S: Sequence[str]](cls: T, content: str | S) -> T:
+    def from_content(cls, content: str | Sequence[str]) -> 'IndentationInfo':
         """
         Analyzes the indentation in the given content and creates an IndentationInfo instance.
 
@@ -185,7 +185,7 @@ class IndentationInfo(NamedTuple):
             return new_indent + line.lstrip()
         return adjust_line
 
-    def apply_relative_indents[S: Sequence[str]](self, content: str | S, context_indent_count: int = 0) -> list[str]:
+    def apply_relative_indents(self, content: str | Sequence[str], context_indent_count: int = 0) -> list[str]:
         """
         Applies relative indentation based on annotations in the content.
 
