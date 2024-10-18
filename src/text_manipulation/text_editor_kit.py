@@ -1,3 +1,11 @@
+"""
+This module provides utilities for text editing operations, particularly focused on
+working with markers, segments, and range specifications in source code.
+
+It includes functions for file I/O, marker and segment processing, and range
+manipulations, which are useful for tasks such as code analysis and transformation.
+"""
+
 from collections.abc import Sequence
 from typing import Protocol, runtime_checkable
 from os import PathLike
@@ -7,11 +15,27 @@ from .range_spec import IdentifierBoundaries, RangeSpec
 
 
 def read_file(file_path: str | PathLike) -> str:
+    """
+    Read the contents of a file.
+
+    Args:
+        file_path (str | PathLike): The path to the file to be read.
+
+    Returns:
+        str: The contents of the file as a string.
+    """
     with open(file_path, 'r') as file:
         return file.read()
 
 
 def write_file(file_path: str | PathLike, lines: Sequence[str]):
+    """
+    Write a sequence of lines to a file.
+
+    Args:
+        file_path (str | PathLike): The path to the file to be written.
+        lines (Sequence[str]): The lines to be written to the file.
+    """
     with open(file_path, 'w') as file:
         file.writelines([line + '\n' for line in lines])
 
@@ -20,6 +44,19 @@ def write_file(file_path: str | PathLike, lines: Sequence[str]):
 #     return len(line) - len(line.lstrip(char))
 
 def bow_to_search_range(bow: BodyOrWhole, searh_range: IdentifierBoundaries | RangeSpec | None = None) -> RangeSpec:
+    """
+    Convert a BodyOrWhole specification to a search range.
+
+    Args:
+        bow (BodyOrWhole): The BodyOrWhole specification.
+        searh_range (IdentifierBoundaries | RangeSpec | None, optional): The search range to use. Defaults to None.
+
+    Returns:
+        RangeSpec: The resulting search range.
+
+    Raises:
+        ValueError: If an invalid search range is provided.
+    """
     match searh_range:
 
         case RangeSpec() | None:
@@ -41,11 +78,29 @@ def bow_to_search_range(bow: BodyOrWhole, searh_range: IdentifierBoundaries | Ra
 
 @runtime_checkable
 class MarkerOrSegmentProtocol(Protocol):
+    """
+    A protocol for objects that can be converted to an index range.
+
+    This protocol defines the interface for objects that can be converted
+    to a RangeSpec based on a sequence of lines and search indices.
+    """
+
     def marker_or_segment_to_index_range(
         self,
         lines: Sequence[str],
         search_start_index: int = 0, search_end_index: int = -1
     ) -> RangeSpec:
+        """
+        Convert the object to an index range.
+
+        Args:
+            lines (Sequence[str]): The lines to search in.
+            search_start_index (int, optional): The start index for the search. Defaults to 0.
+            search_end_index (int, optional): The end index for the search. Defaults to -1.
+
+        Returns:
+            RangeSpec: The resulting index range.
+        """
         ...
 
 
@@ -54,6 +109,22 @@ def marker_or_segment_to_search_range_impl(
     lines: Sequence[str],
     search_range: RangeSpec = RangeSpec.EMPTY
 ) -> RangeSpec | None:
+    """
+    Implementation of the marker or segment to search range conversion.
+
+    This function is used to convert a Marker or Segment object to a RangeSpec.
+
+    Args:
+        self: The Marker or Segment object.
+        lines (Sequence[str]): The lines to search in.
+        search_range (RangeSpec, optional): The initial search range. Defaults to RangeSpec.EMPTY.
+
+    Returns:
+        RangeSpec | None: The resulting search range, or None if not found.
+
+    Raises:
+        ValueError: If an unexpected type is encountered.
+    """
     match self:
         case Marker(type=MarkerType.LINE):
             result = RangeSpec.from_line_marker(lines, self, search_range)
@@ -79,6 +150,24 @@ def segment_to_search_range(
         start_relpos: RelativeMarker, end_relpos: RelativeMarker,
         search_range: RangeSpec = RangeSpec.EMPTY
 ) -> RangeSpec:
+    """
+    Convert a segment defined by start and end relative markers to a search range.
+
+    This function takes a segment defined by start and end relative markers and
+    converts it to a RangeSpec that can be used for searching within the given lines.
+
+    Args:
+        lines (Sequence[str]): The lines to search in.
+        start_relpos (RelativeMarker): The relative marker for the start of the segment.
+        end_relpos (RelativeMarker): The relative marker for the end of the segment.
+        search_range (RangeSpec, optional): The initial search range. Defaults to RangeSpec.EMPTY.
+
+    Returns:
+        RangeSpec: The resulting search range.
+
+    Raises:
+        AssertionError: If the lines are empty or if the start or end markers cannot be found.
+    """
     assert len(lines), "`lines` is empty"
 
     start_match_result = RangeSpec.from_line_marker(lines, start_relpos, search_range)
