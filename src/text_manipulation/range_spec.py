@@ -9,6 +9,7 @@ from .indentation_kit import get_line_indent_count
 
 MATCH_TYPES = ('exact', 'stripped', 'normalized', 'partial')
 
+
 @total_ordering
 class RangeSpec(NamedTuple):
     start: int
@@ -40,7 +41,7 @@ class RangeSpec(NamedTuple):
 
     @property
     def collapsed(self):
-        return self.set_length(0)
+        return self.set_line_count(0)
 
     def set_line_count(self, range_len: int):
         return self._replace(end=self.start + range_len)
@@ -156,16 +157,19 @@ class RangeSpec(NamedTuple):
             if search_term.offset is None and match_type_count > 1:
                 raise ValueError(
                     f"There are {match_type_count} lines matching `{search_term.value}`. "
-                    f"Suggestions: 1) Try using a *different line* as marker (a couple lines before or after the one you tried); "
-                    f"2) If you wanted to *REPLACE* line, try instead to replace a *SEGMENT* of a couple of lines."
-                    # f"Add an `OFFSET` (after the line marker) and a number between 0 and {match_type_count - 1} to determine how many to skip. "
-                    # f"Example to reference the *last* one of those: `LINE '{search_term.value.strip()}' OFFSET {match_type_count - 1}`"
+                    "Suggestions: 1) Try using a *different line* as marker (a couple lines before or after the one "
+                    "you tried); 2) If you wanted to *REPLACE* line, "
+                    "try instead to replace a *SEGMENT* of a couple of lines."
+                    # f"Add an `OFFSET` (after the line marker) and a number between 0 and {match_type_count - 1}
+                    # to determine how many to skip. "
+                    # f"Example to reference the *last* one of those:
+                    # `LINE '{search_term.value.strip()}' OFFSET {match_type_count - 1}`"
                     # ' (See `offset_clause` in `<grammar.js>` for details on OFFSET)'
                 )
             if match_type_count and (search_term.offset or 0) >= match_type_count:
                 raise ValueError(
                     f"There are only {match_type_count} lines matching `{search_term.value}`, "
-                    f"but 'OFFSET' was set to {search_term.offset} (you can skip at most {match_type_count - 1} of those)"
+                    f"but 'OFFSET' was set to {search_term.offset} (you can skip at most {match_type_count-1} of those)"
                 )
 
             if offset < match_type_count:

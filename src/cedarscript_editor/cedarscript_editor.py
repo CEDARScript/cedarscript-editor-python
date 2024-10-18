@@ -7,9 +7,9 @@ from cedarscript_ast_parser import Command, RmFileCommand, MvFileCommand, Update
     InsertClause, ReplaceClause, EditingAction, BodyOrWhole, RegionClause, MarkerType
 from cedarscript_ast_parser.cedarscript_ast_parser import MarkerCompatible, RelativeMarker, \
     RelativePositionType
-from text_manipulation.indentation_kit import IndentationInfo
-from text_manipulation.range_spec import IdentifierBoundaries, RangeSpec
-from text_manipulation.text_editor_kit import read_file, write_file, bow_to_search_range
+from text_manipulation import IndentationInfo
+from text_manipulation import IdentifierBoundaries, RangeSpec
+from text_manipulation import read_file, write_file, bow_to_search_range
 
 from .identifier_selector import select_finder
 
@@ -58,7 +58,9 @@ class CEDARScriptEditorException(Exception):
             "the state at which the file was left (saying what needs to be done now), "
             f"then write new commands that will fix the problem{previous_cmd_notes} "
             "(you'll get a one-million dollar tip if you get it right!) "
-            "Use descriptive comment before each command; If showing CEDARScript commands to the user, *DON'T* enclose them in ```CEDARSCript and ``` otherwise they will be executed!</suggestion></error-details>"
+            "Use descriptive comment before each command; If showing CEDARScript commands to the user, "
+            "*DON'T* enclose them in ```CEDARSCript and ``` otherwise they will be executed!"
+            "</suggestion></error-details>"
         )
 
 
@@ -150,7 +152,7 @@ class CEDARScriptEditor:
         src = read_file(file_path)
         lines = src.splitlines()
 
-        source_info: tuple[LiteralString | str | bytes, str | Sequence[str]] = (file_path, src)
+        source_info: tuple[str | bytes, str | Sequence[str]] = (file_path, src)
 
         def identifier_resolver(m: Marker):
             return self.find_identifier(source_info, m)
