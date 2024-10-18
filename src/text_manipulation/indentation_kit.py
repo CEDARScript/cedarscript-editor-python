@@ -1,16 +1,50 @@
+"""
+This module provides utilities for analyzing and manipulating indentation in text.
+
+It includes functions and classes for extracting indentation, analyzing indentation
+patterns, and adjusting indentation levels in text content. These tools are particularly
+useful for processing and formatting source code or other text with structured indentation.
+
+Key components:
+- get_line_indent_count: Counts the number of leading whitespace characters in a line.
+- extract_indentation: Extracts the leading whitespace from a line.
+- IndentationInfo: A class that analyzes and represents indentation patterns in text.
+
+This module is designed to work with various indentation styles, including spaces and tabs,
+and can handle inconsistent or mixed indentation patterns.
+"""
+
 from collections import Counter
 from collections.abc import Sequence
 from math import gcd
 from typing import NamedTuple
 
 
-def get_line_indent_count(line: str):
+def get_line_indent_count(line: str) -> int:
+    """
+    Count the number of leading whitespace characters in a line.
+
+    Args:
+        line (str): The input line to analyze.
+
+    Returns:
+        int: The number of leading whitespace characters.
+
+    Example:
+        >>> get_line_indent_count("    Hello")
+        4
+        >>> get_line_indent_count("\t\tWorld")
+        2
+    """
     return len(line) - len(line.lstrip())
 
 
 def extract_indentation(line: str) -> str:
     """
     Extract the leading whitespace from a given line.
+
+    This function identifies and returns the leading whitespace characters
+    (spaces or tabs) from the beginning of the input line.
 
     Args:
         line (str): The input line to process.
@@ -33,10 +67,9 @@ class IndentationInfo(NamedTuple):
     """
     A class to represent and manage indentation information.
 
-    This class analyzes and provides utilities for working with indentation.
-    It detects the indentation character (space or tab),
-    the number of characters used for each indentation level, and provides
-    methods to adjust and normalize indentation.
+    This class analyzes and provides utilities for working with indentation in text content.
+    It detects the indentation character (space or tab), the number of characters used for
+    each indentation level, and provides methods to adjust and normalize indentation.
 
     Attributes:
         char_count (int): The number of characters used for each indentation level.
@@ -56,9 +89,16 @@ class IndentationInfo(NamedTuple):
         apply_relative_indents: Applies relative indentation based on annotations in the content.
 
     Note:
-        This class is particularly useful for processing Python code with varying
+        This class is particularly useful for processing code or text with varying
         or inconsistent indentation, and for adjusting indentation to meet specific
-        formatting requirements.
+        formatting requirements. It can handle both space and tab indentation, as well
+        as mixed indentation styles.
+
+    Example:
+        >>> content = "    def example():\n        print('Hello')\n\t\tprint('World')"
+        >>> info = IndentationInfo.from_content(content)
+        >>> print(info.char, info.char_count, info.consistency)
+        ' ' 4 False
     """
     char_count: int
     char: str
@@ -134,26 +174,53 @@ class IndentationInfo(NamedTuple):
 
         return cls(char_count, dominant_char, min_indent_level, consistency, message)
 
-    def level_difference(self, base_indentation_count: int):
+    def level_difference(self, base_indentation_count: int) -> int:
+        """
+        Calculate the difference in indentation levels.
+
+        Args:
+            base_indentation_count (int): The base indentation count to compare against.
+
+        Returns:
+            int: The difference in indentation levels.
+        """
         return self.char_count_to_level(base_indentation_count) - self.min_indent_level
 
     def char_count_to_level(self, char_count: int) -> int:
+        """
+        Convert a character count to an indentation level.
+
+        Args:
+            char_count (int): The number of indentation characters.
+
+        Returns:
+            int: The corresponding indentation level.
+        """
         return char_count // self.char_count
 
     def level_to_chars(self, level: int) -> str:
+        """
+        Convert an indentation level to a string of indentation characters.
+
+        Args:
+            level (int): The indentation level.
+
+        Returns:
+            str: A string of indentation characters for the given level.
+        """
         return level * self.char_count * self.char
 
     def shift_indentation(self, lines: Sequence[str], target_base_indentation_count: int) -> list[str]:
         """
-        Shifts the indentation of a sequence of lines based on a base indentation count.
+        Shift the indentation of a sequence of lines based on a target base indentation count.
 
         This method adjusts the indentation of each non-empty line in the input sequence.
-        It calculates the difference between the base indentation and the minimum
+        It calculates the difference between the target base indentation and the minimum
         indentation found in the content, then applies this shift to all lines.
 
         Args:
             lines (Sequence[str]): A sequence of strings representing the lines to be adjusted.
-            target_base_indentation_count (int): The base indentation count to adjust from.
+            target_base_indentation_count (int): The target base indentation count to adjust to.
 
         Returns:
             list[str]: A new list of strings with adjusted indentation.
@@ -163,6 +230,12 @@ class IndentationInfo(NamedTuple):
             - The method uses the IndentationInfo of the instance to determine
               the indentation character and count.
             - This method is useful for uniformly adjusting indentation across all lines.
+
+        Example:
+            >>> info = IndentationInfo(4, ' ', 1, True)
+            >>> lines = ["    def example():", "        print('Hello')"]
+            >>> info.shift_indentation(lines, 8)
+            ['        def example():', '            print('Hello')']
         """
         raw_line_adjuster = self._shift_indentation_fun(target_base_indentation_count)
         # Return the transformed lines
@@ -187,7 +260,7 @@ class IndentationInfo(NamedTuple):
 
     def apply_relative_indents(self, content: str | Sequence[str], context_indent_count: int = 0) -> list[str]:
         """
-        Applies relative indentation based on annotations in the content.
+        Apply relative indentation based on annotations in the content.
 
         This method processes the input content, interpreting special annotations
         to apply relative indentation. It uses '@' followed by a number to indicate
@@ -213,6 +286,12 @@ class IndentationInfo(NamedTuple):
 
         Raises:
             AssertionError: If the calculated indentation level for any line is negative.
+
+        Example:
+            >>> info = IndentationInfo(4, ' ', 0, True)
+            >>> content = ["@0:def example():", "@1:    print('Hello')", "@2:    if True:", "@3:        print('World')"]
+            >>> info.apply_relative_indents(content, 4)
+            ['    def example():', '        print('Hello')', '            if True:', '                print('World')']
         """
         # TODO Always send str?
         lines = [l.lstrip() for l in content.splitlines() if l.strip()] if isinstance(content, str) else content
