@@ -58,7 +58,7 @@ def marker_or_segment_to_search_range_impl(
         case Marker(type=MarkerType.LINE):
             result = RangeSpec.from_line_marker(lines, self, search_range)
             assert result is not None, (
-                f"Unable to find `{self}`; Try: 1) Double-checking the marker "
+                f"Unable to find {self}; Try: 1) Double-checking the marker "
                 f"(maybe you specified the the wrong one); or 2) using *exactly* the same characters from source; "
                 f"or 3) using another marker"
             )
@@ -83,9 +83,9 @@ def segment_to_search_range(
 
     start_match_result = RangeSpec.from_line_marker(lines, start_relpos, search_range)
     assert start_match_result, (
-        f"Unable to find segment start `{start_relpos}`; Try: "
+        f"Unable to find segment start: {start_relpos}; Try: "
         f"1) Double-checking the marker (maybe you specified the the wrong one); or "
-        f"2) using *exactly* the same characters from source; or 3) using a marker from above"
+        f"2) Using *exactly* the same characters from source; or 3) using a marker from above"
     )
 
     start_index_for_end_marker = start_match_result.as_index
@@ -96,8 +96,9 @@ def segment_to_search_range(
         start_index_for_end_marker, search_range.end, start_match_result.indent
     ))
     assert end_match_result, (
-        f"Unable to find segment end `{end_relpos}` - Try: "
-        f"1) using *exactly* the same characters from source; or 2) using a marker from below"
+        f"Unable to find segment end: {end_relpos}; Try: "
+        f"1) Using *exactly* the same characters from source; or "
+        f"2) using a marker from below"
     )
     if end_match_result.as_index > -1:
         one_after_end = end_match_result.as_index + 1

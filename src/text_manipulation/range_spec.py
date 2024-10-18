@@ -156,7 +156,8 @@ class RangeSpec(NamedTuple):
             if search_term.offset is None and match_type_count > 1:
                 raise ValueError(
                     f"There are {match_type_count} lines matching `{search_term.value}`. "
-                    f"Suggestion: Try using a different line as marker (a couple lines before or after the current one)."
+                    f"Suggestions: 1) Try using a *different line* as marker (a couple lines before or after the one you tried); "
+                    f"2) If you wanted to *REPLACE* line, try instead to replace a *SEGMENT* of a couple of lines."
                     # f"Add an `OFFSET` (after the line marker) and a number between 0 and {match_type_count - 1} to determine how many to skip. "
                     # f"Example to reference the *last* one of those: `LINE '{search_term.value.strip()}' OFFSET {match_type_count - 1}`"
                     # ' (See `offset_clause` in `<grammar.js>` for details on OFFSET)'

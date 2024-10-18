@@ -220,10 +220,11 @@ class CEDARScriptEditor:
 
             case MoveClause(insert_position=insert_position, to_other_file=other_file, relative_indentation=relindent):
                 # TODO Move from 'lines' to the same file or to 'other_file'
-                if range_spec <= range_spec_to_delete:
+
+                if range_spec < range_spec_to_delete:
                     range_spec_to_delete.delete(lines)
                     range_spec.write(content, lines)
-                else:
+                elif range_spec > range_spec_to_delete:
                     range_spec.write(content, lines)
                     range_spec_to_delete.delete(lines)
 
