@@ -1,3 +1,14 @@
+"""
+This module provides utilities for working with ranges of text in source code.
+
+It includes classes and functions for specifying ranges, finding lines,
+and manipulating text within those ranges. The main components are:
+
+- RangeSpec: A class representing a range of lines in a text.
+- IdentifierBoundaries: A class representing the boundaries of an identifier in code.
+- Various utility functions for working with these classes and text manipulation.
+"""
+
 import re
 from collections.abc import Sequence
 from typing import NamedTuple
@@ -12,59 +23,86 @@ MATCH_TYPES = ('exact', 'stripped', 'normalized', 'partial')
 
 @total_ordering
 class RangeSpec(NamedTuple):
+    """
+    Represents a range of lines in a text, with start and end indices and indentation.
+
+    This class is used to specify a range of lines in a text, typically for
+    text manipulation operations. It includes methods for comparing ranges,
+    modifying the range, and performing operations on text using the range.
+
+    Attributes:
+        start (int): The starting line index of the range.
+        end (int): The ending line index of the range (exclusive).
+        indent (int): The indentation level of the range.
+    """
     start: int
     end: int
     indent: int = 0
 
     def __str__(self):
+        """Return a string representation of the RangeSpec."""
         return (f'{self.start}:{self.end}' if self.as_index is None else f'%{self.as_index}') + f'@{self.indent}'
 
     def __lt__(self, other):
+        """Compare if this range is strictly before another range."""
         return self.end < other.start
 
     def __le__(self, other):
+        """Compare if this range is before or adjacent to another range."""
         return self.end <= other.start
 
     def __gt__(self, other):
+        """Compare if this range is strictly after another range."""
         return self.start > other.end
 
     def __ge__(self, other):
+        """Compare if this range is after or adjacent to another range."""
         return self.start >= other.end
 
     @property
     def line_count(self):
+        """Return the number of lines in the range."""
         return self.end - self.start
 
     @property
     def as_index(self) -> int | None:
+        """Return the start index if the range is empty, otherwise None."""
         return None if self.line_count else self.start
 
     @property
     def collapsed(self):
+        """Return a new RangeSpec with the same start but zero length."""
         return self.set_line_count(0)
 
     def set_line_count(self, range_len: int):
+        """Return a new RangeSpec with the specified line count."""
         return self._replace(end=self.start + range_len)
 
     def inc(self, count: int = 1):
+        """Return a new RangeSpec shifted forward by the specified count."""
         return self._replace(start=self.start + count, end=self.end + count)
 
     def dec(self, count: int = 1):
+        """Return a new RangeSpec shifted backward by the specified count."""
         return self._replace(start=self.start - count, end=self.end - count)
 
     def read(self, src: Sequence[str]) -> Sequence[str]:
+        """Read and return the lines from the source sequence specified by this range."""
         return src[self.start:self.end]
 
     def write(self, src: Sequence[str], target: Sequence[str]):
+        """Write the source lines into the target sequence at the position specified by this range."""
         target[self.start:self.end] = src
 
     def delete(self, src: Sequence[str]) -> Sequence[str]:
+        """Delete the lines specified by this range from the source sequence and return the deleted lines."""
         result = self.read(src)
         del src[self.start:self.end]
         return result
 
     @staticmethod
     def normalize_line(line: str):
+        """Normalize a line by replacing non-word characters with dots and stripping whitespace."""
         return re.sub(r'[^\w]', '.', line.strip(), flags=re.UNICODE)
 
     @classmethod
@@ -77,35 +115,31 @@ class RangeSpec(NamedTuple):
         """
         Find the index of a specified line within a list of strings, considering different match types and an offset.
 
-        This function searches for a given line within a list, considering 4 types of matches in order of priority:
+        This method searches for a given line within a list, considering 4 types of matches in order of priority:
         1. Exact match
         2. Stripped match (ignoring leading and trailing whitespace)
         3. Normalized match (ignoring non-alphanumeric characters)
         4. Partial (Searching for a substring, using `casefold` to ignore upper- and lower-case differences).
 
-        The function applies the offset across all match types while maintaining the priority order.
+        The method applies the offset across all match types while maintaining the priority order.
 
-        :Args:
-            :param lines: The list of strings to search through.
-            :param search_term:
-                search_marker.value: The line to search for.
-                search_marker.offset: The number of matches to skip before returning a result.
+        Args:
+            lines (Sequence[str]): The list of strings to search through.
+            search_term (Marker): A Marker object containing:
+                - value: The line to search for.
+                - offset: The number of matches to skip before returning a result.
                           0 skips no match and returns the first match, 1 returns the second match, and so on.
-            :param search_range: The index to start the search from and to end the search at (exclusive).
-                                  Defaults to (0, -1), which means search to the end of the list.
+            search_range (RangeSpec, optional): The range to search within. Defaults to None, which means search the entire list.
 
-        :returns:
-            RangeSpec: The index for the desired line in the 'lines' list.
-                 Returns None if no match is found or if the offset exceeds the number of matches within each category.
+        Returns:
+            RangeSpec: A RangeSpec object representing the found line, or None if no match is found.
 
-        :Example:
-            >> lines = ["Hello, world!", "  Hello, world!  ", "Héllo, wörld?", "Another line", "Hello, world!"]
-            >> _find_line_index(lines, "Hello, world!", 1)
-            4  # Returns the index of the second exact match
+        Raises:
+            ValueError: If there are multiple matches and no offset is specified, or if the offset exceeds the number of matches.
 
         Note:
-            - The function prioritizes match types in the order: exact, stripped, normalized, partial.
-            - The offset is considered separately for each type.
+            - The method prioritizes match types in the order: exact, stripped, normalized, partial.
+            - The offset is considered separately for each match type.
         """
         search_start_index, search_end_index, _ = search_range if search_range is not None else (0, -1, 0)
         search_line = search_term.value
@@ -199,26 +233,55 @@ RangeSpec.EMPTY = RangeSpec(0, -1, 0)
 
 
 class IdentifierBoundaries(NamedTuple):
+    """
+    Represents the boundaries of an identifier in code, including its whole range and body range.
+
+    This class is used to specify the range of an entire identifier (whole) and its body,
+    which is typically the content inside the identifier's definition.
+
+    Attributes:
+        whole (RangeSpec): The RangeSpec representing the entire identifier.
+        body (RangeSpec): The RangeSpec representing the body of the identifier.
+    """
+
     whole: RangeSpec
     body: RangeSpec
 
     def __str__(self):
+        """Return a string representation of the IdentifierBoundaries."""
         return f'IdentifierBoundaries({self.whole} (BODY: {self.body}) )'
 
     @property
     def start_line(self) -> int:
+        """Return the 1-indexed start line of the whole identifier."""
         return self.whole.start + 1
 
     @property
     def body_start_line(self) -> int:
+        """Return the 1-indexed start line of the identifier's body."""
         return self.body.start + 1
 
     @property
     def end_line(self) -> int:
+        """Return the 1-indexed end line of the whole identifier."""
         return self.whole.end
 
-    # See the other bow_to_search_range
     def location_to_search_range(self, location: BodyOrWhole | RelativePositionType) -> RangeSpec:
+        """
+        Convert a location specifier to a RangeSpec for searching.
+
+        This method interprets various location specifiers and returns the appropriate
+        RangeSpec for searching within or around the identifier.
+
+        Args:
+            location (BodyOrWhole | RelativePositionType): The location specifier.
+
+        Returns:
+            RangeSpec: The corresponding RangeSpec for the specified location.
+
+        Raises:
+            ValueError: If an invalid location specifier is provided.
+        """
         match location:
             case BodyOrWhole.BODY:
                 return self.body
