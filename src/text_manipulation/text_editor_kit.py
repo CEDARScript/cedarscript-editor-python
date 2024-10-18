@@ -89,8 +89,9 @@ def segment_to_search_range(
     )
 
     start_index_for_end_marker = start_match_result.as_index
-    if start_relpos.qualifier == RelativePositionType.AFTER:
-        start_index_for_end_marker += -1
+    match start_relpos:
+        case RelativeMarker(qualifier=RelativePositionType.AFTER):
+            start_index_for_end_marker += -1
     end_match_result = RangeSpec.from_line_marker(lines, end_relpos, RangeSpec(
         start_index_for_end_marker, search_range.end, start_match_result.indent
     ))

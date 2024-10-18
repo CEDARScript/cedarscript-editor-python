@@ -1,13 +1,15 @@
 import re
 from collections.abc import Sequence
 from typing import NamedTuple
+from functools import total_ordering
+
 
 from cedarscript_ast_parser import Marker, RelativeMarker, RelativePositionType, MarkerType, BodyOrWhole
 from .indentation_kit import get_line_indent_count
 
 MATCH_TYPES = ('exact', 'stripped', 'normalized', 'partial')
 
-
+@total_ordering
 class RangeSpec(NamedTuple):
     start: int
     end: int
@@ -16,18 +18,31 @@ class RangeSpec(NamedTuple):
     def __str__(self):
         return (f'{self.start}:{self.end}' if self.as_index is None else f'%{self.as_index}') + f'@{self.indent}'
 
-    def __len__(self):
+    def __lt__(self, other):
+        return self.end < other.start
+
+    def __le__(self, other):
+        return self.end <= other.start
+
+    def __gt__(self, other):
+        return self.start > other.end
+
+    def __ge__(self, other):
+        return self.start >= other.end
+
+    @property
+    def line_count(self):
         return self.end - self.start
 
     @property
     def as_index(self) -> int | None:
-        return None if len(self) else self.start
+        return None if self.line_count else self.start
 
     @property
     def collapsed(self):
         return self.set_length(0)
 
-    def set_length(self, range_len: int):
+    def set_line_count(self, range_len: int):
         return self._replace(end=self.start + range_len)
 
     def inc(self, count: int = 1):
@@ -137,7 +152,22 @@ class RangeSpec(NamedTuple):
 
         offset = search_term.offset or 0
         for match_type in MATCH_TYPES:
-            if offset < len(matches[match_type]):
+            match_type_count = len(matches[match_type])
+            if search_term.offset is None and match_type_count > 1:
+                raise ValueError(
+                    f"There are {match_type_count} lines matching `{search_term.value}`. "
+                    f"Suggestion: Try using a different line as marker (a couple lines before or after the current one)."
+                    # f"Add an `OFFSET` (after the line marker) and a number between 0 and {match_type_count - 1} to determine how many to skip. "
+                    # f"Example to reference the *last* one of those: `LINE '{search_term.value.strip()}' OFFSET {match_type_count - 1}`"
+                    # ' (See `offset_clause` in `<grammar.js>` for details on OFFSET)'
+                )
+            if match_type_count and (search_term.offset or 0) >= match_type_count:
+                raise ValueError(
+                    f"There are only {match_type_count} lines matching `{search_term.value}`, "
+                    f"but 'OFFSET' was set to {search_term.offset} (you can skip at most {match_type_count - 1} of those)"
+                )
+
+            if offset < match_type_count:
                 index, reference_indent = matches[match_type][offset]
                 match match_type:
                     case 'normalized':

@@ -18,11 +18,11 @@ def find_commands(content: str):
     pattern = r'```CEDARScript\n(.*?)```'
     cedar_script_blocks = re.findall(pattern, content, re.DOTALL)
     print(f'[find_cedar_commands] Script block count: {len(cedar_script_blocks)}')
-    if len(cedar_script_blocks) == 0:
+    if len(cedar_script_blocks) == 0 and not content.strip().endswith('<NOCEDARSCRIPT/>'):
         raise ValueError(
             "No CEDARScript block detected. "
             "Perhaps you forgot to enclose the block using ```CEDARScript and ``` ? "
-            "Or was that intentional? If so, just write tag <NOSCRIPT/> and nothing else."
+            "Or was that intentional? If so, just write tag <NOCEDARSCRIPT/> as the last line"
         )
     cedarscript_parser = CEDARScriptASTParser()
     for cedar_script in cedar_script_blocks:

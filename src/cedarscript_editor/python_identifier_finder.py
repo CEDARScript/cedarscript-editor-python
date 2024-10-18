@@ -60,14 +60,14 @@ def find_python_identifier(root_path: str, file_name: str, source: str, marker: 
         return None
     if candidate_count > 1 and marker.offset is None:
         raise ValueError(
-            f"There are {candidate_count} functions named `{marker.value}` in file `{file_name}`. "
-            f"Use `OFFSET <0..{candidate_count - 1}>` to determine how many to skip. "
+            f"There are {candidate_count} {marker.type} identifiers named `{marker.value}`. "
+            f"Choose an `OFFSET` between 0 and {candidate_count - 1} to determine how many to skip. "
             f"Example to reference the *last* `{marker.value}`: `OFFSET {candidate_count - 1}`"
         )
     if marker.offset and marker.offset >= candidate_count:
         raise ValueError(
-            f"There are only {candidate_count} functions named `{marker.value} in file `{file_name}`, "
-            f"but 'offset' was set to {marker.offset} (you can only skip {candidate_count - 1} functions)"
+            f"There are only {candidate_count} {marker.type} identifiers named `{marker.value}`, "
+            f"but 'OFFSET' was set to {marker.offset} (you can skip at most {candidate_count - 1} of those)"
         )
     candidates.sort(key=lambda x: x.start_line)
     result: IdentifierBoundaries = get_by_offset(candidates, marker.offset or 0)

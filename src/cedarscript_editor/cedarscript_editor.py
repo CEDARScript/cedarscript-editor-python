@@ -33,7 +33,7 @@ class CEDARScriptEditorException(Exception):
 
             previous_cmd_notes = (
                 f", bearing in mind the file was updated and now contains all changes expressed in "
-                f"commands {items}"
+                f"commands {items}."
             )
             if 'syntax' in description.casefold():
                 probability_indicator = "most probably"
@@ -43,10 +43,11 @@ class CEDARScriptEditorException(Exception):
             note = (
                 f"<note>*ALL* commands *before* command #{command_ordinal} "
                 "were applied and *their changes are already committed*. "
-                f"Re-read the file to catch up with the applied changes."
+                f"So, it's *CRUCIAL* to re-analyze the file to catch up with the applied changes "
+                "and understand what still needs to be done. "
                 f"ATTENTION: The previous command (#{command_ordinal - 1}) {probability_indicator} "
                 f"caused command #{command_ordinal} to fail "
-                f"due to changes that left the file in an invalid state (check that by re-analyzing the file!)</note>"
+                f"due to changes that left the file in an invalid state (check that by re-reading the file!)</note>"
             )
         super().__init__(
             f"<error-details><error-location>COMMAND #{command_ordinal}</error-location>{note}"
@@ -57,7 +58,7 @@ class CEDARScriptEditorException(Exception):
             "the state at which the file was left (saying what needs to be done now), "
             f"then write new commands that will fix the problem{previous_cmd_notes} "
             "(you'll get a one-million dollar tip if you get it right!) "
-            "Use descriptive comment before each command.</suggestion></error-details>"
+            "Use descriptive comment before each command; If showing CEDARScript commands to the user, *DON'T* enclose them in ```CEDARSCript and ``` otherwise they will be executed!</suggestion></error-details>"
         )
 
 
@@ -197,26 +198,34 @@ class CEDARScriptEditor:
                         )
                         dest_indent = dest_range.indent
                         content = move_src_range.read(lines)
-                        count = dest_indent + (relindent or 0)
+                        shift_count = dest_indent + (relindent or 0)
                         content = IndentationInfo.from_content(content).shift_indentation(
-                            content, count
+                            content, shift_count
                         )
                     case _:
                         raise ValueError(f'Invalid content: {content}')
 
-        self._apply_action(action, lines, search_range, content)
+        self._apply_action(action, lines, search_range, content, range_spec_to_delete=move_src_range)
 
         write_file(file_path, lines)
 
         return f"Updated {target if target else 'file'} in {file_path}\n  -> {action}"
 
     @staticmethod
-    def _apply_action(action: EditingAction, lines: Sequence[str], range_spec: RangeSpec, content: str | None = None):
+    def _apply_action(
+        action: EditingAction, lines: Sequence[str], range_spec: RangeSpec, content: str | None = None,
+        range_spec_to_delete: RangeSpec | None = None
+    ):
         match action:
 
             case MoveClause(insert_position=insert_position, to_other_file=other_file, relative_indentation=relindent):
                 # TODO Move from 'lines' to the same file or to 'other_file'
-                range_spec.write(content, lines)
+                if range_spec <= range_spec_to_delete:
+                    range_spec_to_delete.delete(lines)
+                    range_spec.write(content, lines)
+                else:
+                    range_spec.write(content, lines)
+                    range_spec_to_delete.delete(lines)
 
             case DeleteClause():
                 range_spec.delete(lines)
@@ -339,8 +348,8 @@ def restrict_search_range_for_marker(
                         case InsertClause():
                             if action.insert_position.qualifier == RelativePositionType.BEFORE:
                                 search_range = search_range.inc()
-                        case DeleteClause():
-                            search_range = search_range.set_length(1)
+                        case RegionClause():
+                            search_range = search_range.set_line_count(1)
                 case _:
                     identifier_boundaries = identifier_resolver(marker)
                     if not identifier_boundaries:
