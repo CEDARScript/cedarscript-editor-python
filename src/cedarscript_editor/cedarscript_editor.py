@@ -7,9 +7,9 @@ from cedarscript_ast_parser import Command, RmFileCommand, MvFileCommand, Update
     InsertClause, ReplaceClause, EditingAction, BodyOrWhole, RegionClause, MarkerType
 from cedarscript_ast_parser.cedarscript_ast_parser import MarkerCompatible, RelativeMarker, \
     RelativePositionType
-from text_manipulation import IndentationInfo
-from text_manipulation import IdentifierBoundaries, RangeSpec
-from text_manipulation import read_file, write_file, bow_to_search_range
+from text_manipulation import (
+    IndentationInfo, IdentifierBoundaries, RangeSpec, read_file, write_file, bow_to_search_range
+)
 
 from .identifier_selector import select_finder
 
@@ -120,7 +120,8 @@ class CEDARScriptEditor:
         # UpdateCommand(
         #     type='update',
         #     target=SingleFileClause(file_path='tmp.benchmarks/2024-10-04-22-59-58--CEDARScript-Gemini-small/bowling/bowling.py'),
-        #     action=InsertClause(insert_position=RelativeMarker(type=<MarkerType.FUNCTION: 'function'>, value='__init__', offset=None)),
+        #     action=InsertClause(insert_position=RelativeMarker(type=<MarkerType.FUNCTION: 'function'>, value='__init__',
+        #     offset=None)),
         #     content='\n @0:print("This line will be inserted at the top")\n '
         # )
 

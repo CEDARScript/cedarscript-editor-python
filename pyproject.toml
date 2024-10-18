@@ -58,7 +58,7 @@ version_scheme = "post-release"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["cedarscript_editor*", "text_manipulaiton*"]
+include = ["cedarscript_editor*", "text_manipulation*"]
 exclude = ["cedarscript_ast_parser.tests*"]
 namespaces = false
 
