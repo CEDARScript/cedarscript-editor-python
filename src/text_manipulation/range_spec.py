@@ -24,16 +24,16 @@ MATCH_TYPES = ('exact', 'stripped', 'normalized', 'partial')
 @total_ordering
 class RangeSpec(NamedTuple):
     """
-    Represents a range of lines in a text, with start and end indices and indentation.
+    Represents a range of lines in a text, with 0-based start and end indices and indentation.
 
     This class is used to specify a range of lines in a text, typically for
     text manipulation operations. It includes methods for comparing ranges,
     modifying the range, and performing operations on text using the range.
 
     Attributes:
-        start (int): The starting line index of the range.
-        end (int): The ending line index of the range (exclusive).
-        indent (int): The indentation level of the range.
+        start (int): The starting 0-based index of the range.
+        end (int): The ending 0-based index of the range (exclusive).
+        indent (int): The indentation level at the start of the range.
     """
     start: int
     end: int
@@ -75,7 +75,7 @@ class RangeSpec(NamedTuple):
         return self.set_line_count(0)
 
     def set_line_count(self, range_len: int):
-        """Return a new RangeSpec with the specified line count."""
+        """Return a new RangeSpec with the specified line count by adjusting its end."""
         return self._replace(end=self.start + range_len)
 
     def inc(self, count: int = 1):
@@ -91,7 +91,7 @@ class RangeSpec(NamedTuple):
         return src[self.start:self.end]
 
     def write(self, src: Sequence[str], target: Sequence[str]):
-        """Write the source lines into the target sequence at the position specified by this range."""
+        """Write the source lines into the target sequence at the index position specified by this range."""
         target[self.start:self.end] = src
 
     def delete(self, src: Sequence[str]) -> Sequence[str]:
@@ -129,13 +129,15 @@ class RangeSpec(NamedTuple):
                 - value: The line to search for.
                 - offset: The number of matches to skip before returning a result.
                           0 skips no match and returns the first match, 1 returns the second match, and so on.
-            search_range (RangeSpec, optional): The range to search within. Defaults to None, which means search the entire list.
+            search_range (RangeSpec, optional): The range to search within. Defaults to None, which means
+            search the entire list.
 
         Returns:
             RangeSpec: A RangeSpec object representing the found line, or None if no match is found.
 
         Raises:
-            ValueError: If there are multiple matches and no offset is specified, or if the offset exceeds the number of matches.
+            ValueError: If there are multiple matches and no offset is specified, or if the offset exceeds the
+            number of matches.
 
         Note:
             - The method prioritizes match types in the order: exact, stripped, normalized, partial.
@@ -248,7 +250,6 @@ class IdentifierBoundaries(NamedTuple):
     body: RangeSpec
 
     def __str__(self):
-        """Return a string representation of the IdentifierBoundaries."""
         return f'IdentifierBoundaries({self.whole} (BODY: {self.body}) )'
 
     @property
