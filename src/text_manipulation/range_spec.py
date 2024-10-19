@@ -247,7 +247,9 @@ class IdentifierBoundaries(NamedTuple):
     """
 
     whole: RangeSpec
-    body: RangeSpec
+    body: RangeSpec | None = None
+    docstring: RangeSpec | None = None
+    decorators: list[RangeSpec] = []
 
     def __str__(self):
         return f'IdentifierBoundaries({self.whole} (BODY: {self.body}) )'

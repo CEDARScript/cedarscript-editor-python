@@ -1,6 +1,5 @@
 import os
 from collections.abc import Sequence
-from typing import Callable
 
 from cedarscript_ast_parser import Command, RmFileCommand, MvFileCommand, UpdateCommand, \
     SelectCommand, IdentifierFromFile, Segment, Marker, MoveClause, DeleteClause, \
@@ -11,7 +10,7 @@ from text_manipulation import (
     IndentationInfo, IdentifierBoundaries, RangeSpec, read_file, write_file, bow_to_search_range
 )
 
-from .identifier_selector import select_finder
+from .tree_sitter_identifier_finder import IdentifierFinder, find_identifier
 
 
 class CEDARScriptEditorException(Exception):
@@ -65,20 +64,11 @@ class CEDARScriptEditorException(Exception):
 
 
 class CEDARScriptEditor:
-    def __init__(self, root_path):
+    def __init__(self, root_path: os.PathLike):
         self.root_path = os.path.abspath(root_path)
-        print(f'[{self.__class__}] root: {self.root_path}')
+        print(f'[{self.__class__.__name__}] root: {self.root_path}')
 
     # TODO Add 'target_search_range: RangeSpec' parameter
-    def find_identifier(self, source_info: tuple[str, str | Sequence[str]], marker: Marker) -> IdentifierBoundaries:
-        file_path = source_info[0]
-        source = source_info[1]
-        if not isinstance(source, str):
-            source = '\n'.join(source)
-        return (
-            select_finder(self.root_path, file_path, source)
-                (self.root_path, file_path, source, marker)
-        )
 
     def apply_commands(self, commands: Sequence[Command]):
         result = []
@@ -119,8 +109,10 @@ class CEDARScriptEditor:
         # After parsing ->
         # UpdateCommand(
         #     type='update',
-        #     target=SingleFileClause(file_path='tmp.benchmarks/2024-10-04-22-59-58--CEDARScript-Gemini-small/bowling/bowling.py'),
-        #     action=InsertClause(insert_position=RelativeMarker(type=<MarkerType.FUNCTION: 'function'>, value='__init__',
+        #     target=SingleFileClause(file_path='tmp.benchmarks/2024-10-04-22-59-58--CEDARScript-Gemini-small/bowling
+        #     /bowling.py'),
+        #     action=InsertClause(insert_position=RelativeMarker(type=<MarkerType.FUNCTION: 'function'>,
+        #     value='__init__',
         #     offset=None)),
         #     content='\n @0:print("This line will be inserted at the top")\n '
         # )
@@ -155,8 +147,7 @@ class CEDARScriptEditor:
 
         source_info: tuple[str | bytes, str | Sequence[str]] = (file_path, src)
 
-        def identifier_resolver(m: Marker):
-            return self.find_identifier(source_info, m)
+        identifier_finder = find_identifier(source_info)
 
         match action:
             case MoveClause():
@@ -167,16 +158,16 @@ class CEDARScriptEditor:
                 #   action.insertclause.insert_position=FUNCTION(score)
                 #   target.as_marker = FUNCTION(roll) (the one to delete)
                 search_range = RangeSpec.EMPTY
-                move_src_range = restrict_search_range(action, target, identifier_resolver)
+                move_src_range = restrict_search_range(action, target, identifier_finder)
             case _:
                 move_src_range = None
                 # Set range_spec to cover the identifier
-                search_range = restrict_search_range(action, target, identifier_resolver)
+                search_range = restrict_search_range(action, target, identifier_finder)
 
         marker, search_range = find_marker_or_segment(action, lines, search_range)
 
         search_range = restrict_search_range_for_marker(
-            marker, action, lines, search_range, identifier_resolver
+            marker, action, lines, search_range, identifier_finder
         )
 
         match content:
@@ -185,7 +176,7 @@ class CEDARScriptEditor:
             case (region, relindent):
                 dest_indent = search_range.indent
                 content_range = restrict_search_range_for_marker(
-                    region, action, lines, RangeSpec.EMPTY, identifier_resolver
+                    region, action, lines, RangeSpec.EMPTY, identifier_finder
                 )
                 content = content_range.read(lines)
                 count = dest_indent + (relindent or 0)
@@ -197,7 +188,7 @@ class CEDARScriptEditor:
                 match action:
                     case MoveClause(insert_position=region, relative_indentation=relindent):
                         dest_range = restrict_search_range_for_marker(
-                            region, action, lines, RangeSpec.EMPTY, identifier_resolver
+                            region, action, lines, RangeSpec.EMPTY, identifier_finder
                         )
                         dest_indent = dest_range.indent
                         content = move_src_range.read(lines)
@@ -263,38 +254,38 @@ class CEDARScriptEditor:
     #
     #     return f"Created file: {command['file']}"
 
-    def find_index_range_for_region(self,
-                                    region: BodyOrWhole | Marker | Segment | RelativeMarker,
-                                    lines: Sequence[str],
-                                    identifier_resolver: Callable[[Marker], IdentifierBoundaries],
-                                    search_range: RangeSpec | IdentifierBoundaries | None = None,
-                                    ) -> RangeSpec:
-        # BodyOrWhole | RelativeMarker | MarkerOrSegment
-        # marker_or_segment_to_index_range_impl
-        # IdentifierBoundaries.location_to_search_range(self, location: BodyOrWhole | RelativePositionType) -> RangeSpec
-        match region:
-            case BodyOrWhole() as bow:
-                # TODO Set indent char count
-                index_range = bow_to_search_range(bow, search_range)
-            case Marker() | Segment() as mos:
-                if isinstance(search_range, IdentifierBoundaries):
-                    search_range = search_range.whole
-                match mos:
-                    case Marker(type=marker_type):
-                        match marker_type:
-                            case MarkerType.LINE:
-                                pass
-                            case _:
-                                # TODO transform to RangeSpec
-                                mos = self.find_identifier(("find_index_range_for_region", lines), mos).body
-                index_range = mos.to_search_range(
-                    lines,
-                    search_range.start if search_range else 0,
-                    search_range.end if search_range else -1,
-                )
-            case _ as invalid:
-                raise ValueError(f"Invalid: {invalid}")
-        return index_range
+
+def find_index_range_for_region(region: BodyOrWhole | Marker | Segment | RelativeMarker,
+                                lines: Sequence[str],
+                                identifier_finder: IdentifierFinder,
+                                search_range: RangeSpec | IdentifierBoundaries | None = None,
+                                ) -> RangeSpec:
+    # BodyOrWhole | RelativeMarker | MarkerOrSegment
+    # marker_or_segment_to_index_range_impl
+    # IdentifierBoundaries.location_to_search_range(self, location: BodyOrWhole | RelativePositionType) -> RangeSpec
+    match region:
+        case BodyOrWhole() as bow:
+            # TODO Set indent char count
+            index_range = bow_to_search_range(bow, search_range)
+        case Marker() | Segment() as mos:
+            if isinstance(search_range, IdentifierBoundaries):
+                search_range = search_range.whole
+            match mos:
+                case Marker(type=marker_type):
+                    match marker_type:
+                        case MarkerType.LINE:
+                            pass
+                        case _:
+                            # TODO transform to RangeSpec
+                            mos = find_identifier(("TODO?.py", lines))(mos).body
+            index_range = mos.to_search_range(
+                lines,
+                search_range.start if search_range else 0,
+                search_range.end if search_range else -1,
+            )
+        case _ as invalid:
+            raise ValueError(f"Invalid: {invalid}")
+    return index_range
 
 
 def find_marker_or_segment(
@@ -315,12 +306,12 @@ def find_marker_or_segment(
     return marker, search_range
 
 
-def restrict_search_range(action, target, identifier_resolver: Callable[[Marker], IdentifierBoundaries]) -> RangeSpec:
+def restrict_search_range(action, target, identifier_finder: IdentifierFinder) -> RangeSpec:
     search_range = RangeSpec.EMPTY
     match target:
         case IdentifierFromFile() as identifier_from_file:
             identifier_marker = identifier_from_file.as_marker
-            identifier_boundaries = identifier_resolver(identifier_marker)
+            identifier_boundaries = identifier_finder(identifier_marker)
             if not identifier_boundaries:
                 raise ValueError(f"'{identifier_marker}' not found")
             match action:
@@ -338,7 +329,7 @@ def restrict_search_range_for_marker(
     action: EditingAction,
     lines: Sequence[str],
     search_range: RangeSpec,
-    identifier_resolver: Callable[[Marker], IdentifierBoundaries]
+    identifier_finder: IdentifierFinder
 ) -> RangeSpec:
     if marker is None:
         return search_range
@@ -355,7 +346,7 @@ def restrict_search_range_for_marker(
                         case RegionClause():
                             search_range = search_range.set_line_count(1)
                 case _:
-                    identifier_boundaries = identifier_resolver(marker)
+                    identifier_boundaries = identifier_finder(marker)
                     if not identifier_boundaries:
                         raise ValueError(f"'{marker}' not found")
                     qualifier: RelativePositionType = marker.qualifier if isinstance(
