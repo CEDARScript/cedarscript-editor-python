@@ -76,10 +76,12 @@ def associate_identifier_parts(captures: Iterable[CaptureInfo], lines: list[str]
             identifier_map[range_spec.start] = IdentifierBoundaries(range_spec)
 
         else:
-            parent_key = capture.node.parent.start_point[0]
-            parent = identifier_map.get(parent_key)
+            parent = find_parent_definition(capture.node)
+            if parent:
+                parent_key = parent.start_point[0]
+                parent = identifier_map.get(parent_key)
             if parent is None:
-                raise ValueError(f'Parent node not found for "{capture.node_type}"')
+                raise ValueError(f'Parent node not found for [{capture.capture_type} - {capture.node_type}] ({capture.node.text.decode("utf-8").strip()})')
             match capture_type:
                 case 'body':
                     parent = parent._replace(body=range_spec)
@@ -92,6 +94,15 @@ def associate_identifier_parts(captures: Iterable[CaptureInfo], lines: list[str]
             identifier_map[parent_key] = parent
 
     return sorted(identifier_map.values(), key=lambda x: x.whole.start)
+
+
+def find_parent_definition(node):
+    # TODO How to deal with 'decorated_definition' ?
+    while node.parent:
+        node = node.parent
+        if node.type.endswith('_definition'):
+            return node
+    return None
 
 
 def _find_identifier(language, source: str, tree, query_scm: dict[str, dict[str, str]], marker: Marker) \
@@ -113,7 +124,7 @@ def _find_identifier(language, source: str, tree, query_scm: dict[str, dict[str,
             source.splitlines()
         )
     except Exception as e:
-        raise ValueError(f"Unable to capture nodes for {marker}") from e
+        raise ValueError(f"Unable to capture nodes for {marker}: {e}") from e
 
     candidate_count = len(candidates)
     if not candidate_count:
