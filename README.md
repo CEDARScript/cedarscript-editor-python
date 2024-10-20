@@ -13,7 +13,10 @@ from the LLMs.
 The CEDARScript runtime _bears the brunt of file editing_ by locating the exact line numbers and characters to change,
 which indentation levels to apply to each line and so on, allowing the _CEDARScript commands_ to focus instead on 
 **higher levels of abstraction**, like identifier names, line markers, relative indentations and positions
-(`AFTER`, `BEFORE`, `INSIDE` a function, its `BODY`, at the `TOP` or `BOTTOM` of it...)
+(`AFTER`, `BEFORE`, `INSIDE` a function, its `BODY`, at the `TOP` or `BOTTOM` of it...).
+
+It acts as an _intermediary_ between the **LLM** and the **codebase**, handling the low-level details of code
+manipulation and allowing the AI to focus on higher-level tasks.
 
 ## What is CEDARScript?
 
