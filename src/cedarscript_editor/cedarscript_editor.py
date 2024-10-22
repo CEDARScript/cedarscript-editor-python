@@ -196,6 +196,8 @@ class CEDARScriptEditor:
                         content = IndentationInfo.from_content(content).shift_indentation(
                             content, shift_count
                         )
+                    case DeleteClause():
+                        pass
                     case _:
                         raise ValueError(f'Invalid content: {content}')
 
