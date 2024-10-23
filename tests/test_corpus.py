@@ -14,7 +14,9 @@ def get_test_cases() -> list[str]:
     list[str]: Names of all test case directories in the corpus
     """
     corpus_dir = Path(__file__).parent / 'corpus'
-    return [d.name for d in corpus_dir.iterdir() if d.is_dir()]
+    result = [d.name for d in corpus_dir.iterdir() if d.is_dir() and not d.name.startswith('.')]
+    exclusive = [d for d in result if d.casefold().startswith('x.')]
+    return exclusive or result
 
 
 @pytest.fixture

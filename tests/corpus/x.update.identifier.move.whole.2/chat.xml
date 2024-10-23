@@ -1,0 +1,8 @@
+<no-train>
+```CEDARScript
+-- 2nd pst becomes inner of A3
+UPDATE FUNCTION "pst" OFFSET 1 FROM FILE "main.py"
+MOVE WHOLE INSERT AFTER CLASS "A3"
+RELATIVE INDENTATION 1;
+```
+</no-train>

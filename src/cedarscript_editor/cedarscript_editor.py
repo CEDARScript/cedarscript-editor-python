@@ -184,26 +184,28 @@ class CEDARScriptEditor:
         match content:
             case str() | [str(), *_] | (str(), *_):
                 pass
-            case (region, relindent):
-                dest_indent = search_range.indent
+            case (region, relindent_level):
+                dest_indent_count = search_range.indent
                 content_range = restrict_search_range_for_marker(
                     region, action, lines, RangeSpec.EMPTY, identifier_finder
                 )
                 content = content_range.read(lines)
-                count = dest_indent + (relindent or 0)
+                count = dest_indent_count + (relindent_level or 0)
                 content = IndentationInfo.from_content(content).shift_indentation(
                     content, count
                 )
                 content = (region, content)
             case _:
                 match action:
-                    case MoveClause(insert_position=region, relative_indentation=relindent):
-                        dest_range = restrict_search_range_for_marker(
-                            region, action, lines, RangeSpec.EMPTY, identifier_finder
-                        )
-                        dest_indent = dest_range.indent
+                    case MoveClause(insert_position=region, relative_indentation=relindent_level):
+                        # dest_range = restrict_search_range_for_marker(
+                        #     region, action, lines, RangeSpec.EMPTY, identifier_finder
+                        # )
+                        # TODO Make sure 3 lines above are not needed
+                        dest_range = search_range
+                        dest_indent_count = dest_range.indent
                         content = move_src_range.read(lines)
-                        shift_count = dest_indent + (relindent or 0)
+                        shift_count = dest_indent_count + (relindent_level or 0) # TODO Fix
                         content = IndentationInfo.from_content(content).shift_indentation(
                             content, shift_count
                         )

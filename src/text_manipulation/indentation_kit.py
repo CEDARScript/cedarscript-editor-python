@@ -210,6 +210,7 @@ class IndentationInfo(NamedTuple):
         """
         return level * self.char_count * self.char
 
+    # TODO Revise
     def shift_indentation(self, lines: Sequence[str], target_base_indentation_count: int) -> list[str]:
         """
         Shift the indentation of a sequence of lines based on a target base indentation count.
