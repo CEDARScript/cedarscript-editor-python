@@ -40,7 +40,6 @@ class RangeSpec(NamedTuple):
     indent: int = 0
 
     def __str__(self):
-        """Return a string representation of the RangeSpec."""
         return (f'{self.start}:{self.end}' if self.as_index is None else f'%{self.as_index}') + f'@{self.indent}'
 
     def __lt__(self, other):

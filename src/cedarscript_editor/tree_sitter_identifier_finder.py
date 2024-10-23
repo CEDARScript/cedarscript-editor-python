@@ -1,7 +1,7 @@
 import logging
 from typing import Callable, TypeAlias, Sequence, NamedTuple, Iterable
 
-from cedarscript_ast_parser import Marker, MarkerType
+from cedarscript_ast_parser import Marker, MarkerType, Segment
 from grep_ast import filename_to_lang
 from text_manipulation.indentation_kit import get_line_indent_count
 from text_manipulation.range_spec import IdentifierBoundaries, RangeSpec
@@ -11,28 +11,37 @@ from .tree_sitter_identifier_queries import LANG_TO_TREE_SITTER_QUERY
 
 _log = logging.getLogger(__name__)
 
-IdentifierFinder: TypeAlias = Callable[[Marker], IdentifierBoundaries | None]
+IdentifierFinder: TypeAlias = Callable[[Marker], IdentifierBoundaries | RangeSpec | None]
 
 
-def find_identifier(source_info: tuple[str, str | Sequence[str]]) -> IdentifierFinder:
+def find_identifier(source_info: tuple[str, str | Sequence[str]], search_rage: RangeSpec = RangeSpec.EMPTY) -> IdentifierFinder:
     file_path = source_info[0]
     source = source_info[1]
     if not isinstance(source, str):
         source = '\n'.join(source)
-    return _select_finder(file_path, source)
+    return _select_finder(file_path, source, search_rage)
 
 
-def _select_finder(file_path: str, source: str) -> IdentifierFinder:
+def _select_finder(file_path: str, source: str, search_range: RangeSpec = RangeSpec.EMPTY) -> IdentifierFinder:
     langstr = filename_to_lang(file_path)
     language = get_language(langstr)
     parser = get_parser(langstr)
     _log.info(f"[select_finder] Selected {language}")
 
     tree = parser.parse(bytes(source, "utf-8"))
+    source = source.splitlines()
     query_info = LANG_TO_TREE_SITTER_QUERY[langstr]
 
-    def find_by_marker(marker: Marker) -> IdentifierBoundaries | None:
-        return _find_identifier(language, source, tree, query_info, marker)
+    def find_by_marker(mos: Marker | Segment) -> IdentifierBoundaries | RangeSpec | None:
+        match mos:
+
+            case Marker(MarkerType.LINE) | Segment():
+                # TODO pass IdentifierFinder to enable identifiers as start and/or end of a segment
+                return mos.to_search_range(source, search_range).set_line_count(1)  # returns RangeSpec
+
+            case Marker() as marker:
+                # Returns IdentifierBoundaries
+                return _find_identifier(language, source, tree, query_info, marker)
 
     return find_by_marker
 
@@ -66,7 +75,7 @@ class CaptureInfo(NamedTuple):
         return self.node.text.decode("utf-8")
 
 
-def associate_identifier_parts(captures: Iterable[CaptureInfo], lines: list[str]) -> list[IdentifierBoundaries]:
+def associate_identifier_parts(captures: Iterable[CaptureInfo], lines: Sequence[str]) -> list[IdentifierBoundaries]:
     identifier_map: dict[int, IdentifierBoundaries] = {}
 
     for capture in captures:
@@ -105,7 +114,7 @@ def find_parent_definition(node):
     return None
 
 
-def _find_identifier(language, source: str, tree, query_scm: dict[str, dict[str, str]], marker: Marker) \
+def _find_identifier(language, source: Sequence[str], tree, query_scm: dict[str, dict[str, str]], marker: Marker) \
         -> IdentifierBoundaries | None:
     """
     Find the starting line index of a specified function in the given lines.
@@ -121,7 +130,7 @@ def _find_identifier(language, source: str, tree, query_scm: dict[str, dict[str,
         candidates = language.query(query_scm[marker.type].format(name=marker.value)).captures(tree.root_node)
         candidates: list[IdentifierBoundaries] = capture2identifier_boundaries(
             candidates,
-            source.splitlines()
+            source
         )
     except Exception as e:
         raise ValueError(f"Unable to capture nodes for {marker}: {e}") from e
@@ -145,7 +154,7 @@ def _find_identifier(language, source: str, tree, query_scm: dict[str, dict[str,
     return result
 
 
-def capture2identifier_boundaries(captures, lines: list[str]) -> list[IdentifierBoundaries]:
+def capture2identifier_boundaries(captures, lines: Sequence[str]) -> list[IdentifierBoundaries]:
     captures = [CaptureInfo(c[1], c[0]) for c in captures if not c[1].startswith('_')]
     unique_captures = {}
     for capture in captures:

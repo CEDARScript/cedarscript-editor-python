@@ -149,6 +149,8 @@ class CEDARScriptEditor:
 
         identifier_finder = find_identifier(source_info)
 
+        # TODO test...
+
         match action:
             case MoveClause():
                 # (Check parse_update_command)
@@ -164,11 +166,19 @@ class CEDARScriptEditor:
                 # Set range_spec to cover the identifier
                 search_range = restrict_search_range(action, target, identifier_finder)
 
-        marker, search_range = find_marker_or_segment(action, lines, search_range)
-
-        search_range = restrict_search_range_for_marker(
-            marker, action, lines, search_range, identifier_finder
-        )
+        # UPDATE FUNCTION "_check_raw_id_fields_item"
+        # FROM FILE "refactor-benchmark/checks_BaseModelAdminChecks__check_raw_id_fields_item/checks.py"
+        # REPLACE LINE "def _check_raw_id_fields_item(self, obj, field_name, label):"
+        # WITH CONTENT '''
+        # @0:def _check_raw_id_fields_item(obj, field_name, label):
+        # ''';
+        # target = IdentifierFromFile(file_path='refactor-benchmark/checks_BaseModelAdminChecks__check_raw_id_fields_item/checks.py', identifier_type=<MarkerType.FUNCTION: 'function'>, name='_check_raw_id_fields_item', where_clause=None, offset=None)
+        # action = ReplaceClause(region=Marker(type=<MarkerType.LINE: line>, value=def _check_raw_id_fields_item(self, obj, field_name, label):, offset=None))
+        if search_range.line_count:
+            marker, search_range = find_marker_or_segment(action, lines, search_range)
+            search_range = restrict_search_range_for_marker(
+                marker, action, lines, search_range, identifier_finder
+            )
 
         match content:
             case str() | [str(), *_] | (str(), *_):
@@ -309,7 +319,6 @@ def find_marker_or_segment(
 
 
 def restrict_search_range(action, target, identifier_finder: IdentifierFinder) -> RangeSpec:
-    search_range = RangeSpec.EMPTY
     match target:
         case IdentifierFromFile() as identifier_from_file:
             identifier_marker = identifier_from_file.as_marker
@@ -318,12 +327,19 @@ def restrict_search_range(action, target, identifier_finder: IdentifierFinder) -
                 raise ValueError(f"'{identifier_marker}' not found")
             match action:
                 case RegionClause(region=region):
-                    match region:  # BodyOrWhole | Marker | Segment
-                        case BodyOrWhole():
-                            search_range = identifier_boundaries.location_to_search_range(region)
-                        case _:
-                            search_range = identifier_boundaries.location_to_search_range(BodyOrWhole.WHOLE)
-    return search_range
+                    match region:
+                        case BodyOrWhole() | RelativePositionType():
+                            return identifier_boundaries.location_to_search_range(region)
+                        case Marker() as inner_marker:
+                            match identifier_finder(inner_marker):
+                                case IdentifierBoundaries() as inner_boundaries:
+                                    return inner_boundaries.whole
+                                case RangeSpec() as inner_range_spec:
+                                    return inner_range_spec
+                        case _ as invalid: # Marker (LINE) or Segment
+                            # TODO
+                            raise ValueError(f'Not implemented: {invalid}')
+    return RangeSpec.EMPTY
 
 
 def restrict_search_range_for_marker(
