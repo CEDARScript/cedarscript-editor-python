@@ -185,14 +185,12 @@ class CEDARScriptEditor:
             case str() | [str(), *_] | (str(), *_):
                 pass
             case (region, relindent_level):
-                dest_indent_count = search_range.indent
                 content_range = restrict_search_range_for_marker(
                     region, action, lines, RangeSpec.EMPTY, identifier_finder
                 )
                 content = content_range.read(lines)
-                count = dest_indent_count + (relindent_level or 0)
-                content = IndentationInfo.from_content(content).shift_indentation(
-                    content, count
+                content = IndentationInfo.from_content(lines).update_min_indent_level(content).shift_indentation(
+                    content, search_range.indent, relindent_level
                 )
                 content = (region, content)
             case _:
@@ -201,13 +199,10 @@ class CEDARScriptEditor:
                         # dest_range = restrict_search_range_for_marker(
                         #     region, action, lines, RangeSpec.EMPTY, identifier_finder
                         # )
-                        # TODO Make sure 3 lines above are not needed
-                        dest_range = search_range
-                        dest_indent_count = dest_range.indent
+                        # TODO Are the 3 lines above needed?
                         content = move_src_range.read(lines)
-                        shift_count = dest_indent_count + (relindent_level or 0) # TODO Fix
-                        content = IndentationInfo.from_content(content).shift_indentation(
-                            content, shift_count
+                        content = IndentationInfo.from_content(lines).update_min_indent_level(content).shift_indentation(
+                            content, search_range.indent, relindent_level
                         )
                     case DeleteClause():
                         pass

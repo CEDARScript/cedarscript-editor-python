@@ -174,6 +174,9 @@ class IndentationInfo(NamedTuple):
 
         return cls(char_count, dominant_char, min_indent_level, consistency, message)
 
+    def update_min_indent_level(self, content: str | Sequence[str]) -> 'IndentationInfo':
+        return self._replace(min_indent_level=IndentationInfo.from_content(content).min_indent_level)
+
     def level_difference(self, base_indentation_count: int) -> int:
         """
         Calculate the difference in indentation levels.
@@ -211,7 +214,9 @@ class IndentationInfo(NamedTuple):
         return level * self.char_count * self.char
 
     # TODO Revise
-    def shift_indentation(self, lines: Sequence[str], target_base_indentation_count: int) -> list[str]:
+    def shift_indentation(
+            self, lines: Sequence[str], target_base_indentation_count: int, relindent_level: int | None
+    ) -> list[str]:
         """
         Shift the indentation of a sequence of lines based on a target base indentation count.
 
@@ -222,6 +227,7 @@ class IndentationInfo(NamedTuple):
         Args:
             lines (Sequence[str]): A sequence of strings representing the lines to be adjusted.
             target_base_indentation_count (int): The target base indentation count to adjust to.
+            relindent_level (int|None):
 
         Returns:
             list[str]: A new list of strings with adjusted indentation.
@@ -238,6 +244,7 @@ class IndentationInfo(NamedTuple):
             >>> info.shift_indentation(lines, 8)
             ['        def example():', '            print('Hello')']
         """
+        target_base_indentation_count += self.char_count * (relindent_level or 0)
         raw_line_adjuster = self._shift_indentation_fun(target_base_indentation_count)
         # Return the transformed lines
         return [raw_line_adjuster(line) for line in lines]
