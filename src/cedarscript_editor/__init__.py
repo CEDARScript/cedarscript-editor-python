@@ -7,7 +7,7 @@ __all__ = [
     "__version__", "find_commands", "CEDARScriptEditor"
 ]
 
-
+# TODO Move to cedarscript-ast-parser
 def find_commands(content: str):
     # Regex pattern to match CEDARScript blocks
     pattern = r'```CEDARScript\n(.*?)```'

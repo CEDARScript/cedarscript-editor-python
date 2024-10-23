@@ -1,0 +1,6 @@
+<no-train>
+```CEDARScript
+UPDATE FILE "main.something" DELETE LINE 'risus cursus'
+UPDATE FILE "main.something" DELETE LINE "etiam a"
+```
+</no-train>

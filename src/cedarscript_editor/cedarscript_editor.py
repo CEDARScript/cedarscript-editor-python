@@ -1,5 +1,6 @@
 import os
 from collections.abc import Sequence
+from pathlib import Path
 
 from cedarscript_ast_parser import Command, RmFileCommand, MvFileCommand, UpdateCommand, \
     SelectCommand, IdentifierFromFile, Segment, Marker, MoveClause, DeleteClause, \
@@ -65,7 +66,7 @@ class CEDARScriptEditorException(Exception):
 
 class CEDARScriptEditor:
     def __init__(self, root_path: os.PathLike):
-        self.root_path = os.path.abspath(root_path)
+        self.root_path = Path(os.path.abspath(root_path))
         print(f'[{self.__class__.__name__}] root: {self.root_path}')
 
     # TODO Add 'target_search_range: RangeSpec' parameter
@@ -257,14 +258,14 @@ class CEDARScriptEditor:
     def _delete_function(self, cmd):  # TODO
         file_path = os.path.join(self.root_path, cmd.file_path)
 
-    # def _create_command(self, cmd: CreateCommand):
-    #     file_path = os.path.join(self.root_path, cmd.file_path)
-    #
-    #     os.makedirs(os.path.dirname(file_path), exist_ok=False)
-    #     with open(file_path, 'w') as file:
-    #         file.write(content)
-    #
-    #     return f"Created file: {command['file']}"
+        def _create_command(self, cmd: CreateCommand):
+            file_path = os.path.join(self.root_path, cmd.file_path)
+            
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            with open(file_path, 'w') as file:
+                file.write(cmd.content)
+            
+            return f"Created file: {cmd.file_path}"
 
 
 def find_index_range_for_region(region: BodyOrWhole | Marker | Segment | RelativeMarker,

@@ -24,13 +24,18 @@ def find_identifier(source_info: tuple[str, str | Sequence[str]], search_rage: R
 
 def _select_finder(file_path: str, source: str, search_range: RangeSpec = RangeSpec.EMPTY) -> IdentifierFinder:
     langstr = filename_to_lang(file_path)
-    language = get_language(langstr)
-    parser = get_parser(langstr)
-    _log.info(f"[select_finder] Selected {language}")
+    match langstr:
+        case None:
+            language = None
+            query_info = None
+            _log.info(f"[select_finder] NO LANGUAGE for `{file_path}`")
+        case _:
+            query_info = LANG_TO_TREE_SITTER_QUERY[langstr]
+            language = get_language(langstr)
+            _log.info(f"[select_finder] Selected {language}")
+            tree = get_parser(langstr).parse(bytes(source, "utf-8"))
 
-    tree = parser.parse(bytes(source, "utf-8"))
     source = source.splitlines()
-    query_info = LANG_TO_TREE_SITTER_QUERY[langstr]
 
     def find_by_marker(mos: Marker | Segment) -> IdentifierBoundaries | RangeSpec | None:
         match mos:
