@@ -1,0 +1,9 @@
+<no-train>
+```CEDARScript
+UPDATE FUNCTION "calculate" FROM FILE "math_ops.py"
+REPLACE PARAMETERS
+WITH CONTENT '''
+@0:a: float, b: float, operation: str = "add"
+'''
+```
+</no-train>
