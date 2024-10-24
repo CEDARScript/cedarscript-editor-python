@@ -21,7 +21,7 @@ class B:
         pass
     def a(self):
         def calculate_plus_5(
-            a, b,
+            a, b
         ):
             a += 5
             return a + b

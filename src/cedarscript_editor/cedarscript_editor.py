@@ -133,7 +133,7 @@ class CEDARScriptEditor:
         # ''';
         # target = IdentifierFromFile(file_path='refactor-benchmark/checks_BaseModelAdminChecks__check_raw_id_fields_item/checks.py', identifier_type=<MarkerType.FUNCTION: 'function'>, name='_check_raw_id_fields_item', where_clause=None, offset=None)
         # action = ReplaceClause(region=Marker(type=<MarkerType.LINE: line>, value=def _check_raw_id_fields_item(self, obj, field_name, label):, offset=None))
-        if search_range.line_count:
+        if search_range.line_count and not isinstance(action.region, Segment):
             marker, search_range = find_marker_or_segment(action, lines, search_range)
             search_range = restrict_search_range_for_marker(
                 marker, action, lines, search_range, identifier_finder

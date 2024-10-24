@@ -182,7 +182,7 @@ class RangeSpec(NamedTuple):
             elif normalized_search_line == cls.normalize_line(line):
                 matches['normalized'].append((i, reference_indent))
 
-            # Last resort!
+            # Dangerous! Last resort!
             elif normalized_search_line.casefold() in cls.normalize_line(line).casefold():
                 matches['partial'].append((i, reference_indent))
 
