@@ -4,7 +4,7 @@ UPDATE FUNCTION "fun2"
 FROM FILE "1.py"
 REPLACE LINE "def fun2(self, a, b, c):"
 WITH CONTENT '''
-µ@0:def fun2(a, b, c):
+@0:def fun2(a, b, c):
 ''';
 
 UPDATE FUNCTION "calculate"

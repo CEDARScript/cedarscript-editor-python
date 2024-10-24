@@ -78,8 +78,8 @@ def test_corpus(editor: CEDARScriptEditor, test_case: str):
                     expected_file = test_dir / f"expected.{rel_path}"
                     assert expected_file.exists(), f"Expected file not found: {expected_file}"
 
-                    expected_content = expected_file.read_text()
-                    result_content = path.read_text()
+                    expected_content = f"[{rel_path}] \n" + expected_file.read_text()
+                    result_content = f"[{rel_path}] \n" + path.read_text()
                     assert result_content.strip() == expected_content.strip(), \
                         f"Output does not match expected content for {rel_path}"
 

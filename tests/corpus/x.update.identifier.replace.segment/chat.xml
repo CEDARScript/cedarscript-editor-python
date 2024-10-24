@@ -1,0 +1,15 @@
+<no-train>
+```CEDARScript
+UPDATE CLASS "B"
+FROM FILE "1.py"
+REPLACE SEGMENT
+STARTING BEFORE LINE "a," OFFSET 1
+ENDING AFTER LINE "e" OFFSET 0
+WITH CONTENT '''
+@-2:def calculate_plus_5(
+@-1:a, b
+@-2):
+@-1:a += 5
+''';
+```
+</no-train>

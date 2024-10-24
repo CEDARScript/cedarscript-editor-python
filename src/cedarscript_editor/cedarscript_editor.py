@@ -311,7 +311,7 @@ def restrict_search_range(action, target, identifier_finder: IdentifierFinder) -
                                     return inner_boundaries.whole
                                 case RangeSpec() as inner_range_spec:
                                     return inner_range_spec
-                        case _ as invalid: # Marker (LINE) or Segment
+                        case _ as invalid: # Segment
                             # TODO
                             raise ValueError(f'Not implemented: {invalid}')
     return RangeSpec.EMPTY
