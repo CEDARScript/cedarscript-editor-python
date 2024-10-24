@@ -311,9 +311,10 @@ def restrict_search_range(action, target, identifier_finder: IdentifierFinder) -
                                     return inner_boundaries.whole
                                 case RangeSpec() as inner_range_spec:
                                     return inner_range_spec
-                        case _ as invalid: # Segment
-                            # TODO
-                            raise ValueError(f'Not implemented: {invalid}')
+                        case Segment() as segment:
+                            return segment.to_search_range(lines, identifier_boundaries.whole)
+                        case _ as invalid:
+                            raise ValueError(f'Unsupported region type: {type(invalid)}')
     return RangeSpec.EMPTY
 
 
