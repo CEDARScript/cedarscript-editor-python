@@ -187,6 +187,7 @@ class RangeSpec(NamedTuple):
                 matches['partial'].append((i, reference_indent))
 
         offset = search_term.offset or 0
+        max_match_count = max([len(m) for m in matches.values()])
         for match_type in MATCH_TYPES:
             match_type_count = len(matches[match_type])
             if search_term.offset is None and match_type_count > 1:
@@ -201,9 +202,10 @@ class RangeSpec(NamedTuple):
                     # `LINE '{search_term.value.strip()}' OFFSET {match_type_count - 1}`"
                     # ' (See `offset_clause` in `<grammar.js>` for details on OFFSET)'
                 )
-            if match_type_count and (search_term.offset or 0) >= match_type_count:
+
+            if match_type_count and offset >= max_match_count:
                 raise ValueError(
-                    f"There are only {match_type_count} lines matching `{search_term.value}`, "
+                    f"There are only {max_match_count} lines matching `{search_term.value}`, "
                     f"but 'OFFSET' was set to {search_term.offset} (you can skip at most {match_type_count-1} of those)"
                 )
 

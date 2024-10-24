@@ -119,7 +119,7 @@ class CEDARScriptEditor:
                 #   action.insertclause.insert_position=FUNCTION(score)
                 #   target.as_marker = FUNCTION(roll) (the one to delete)
                 search_range = RangeSpec.EMPTY
-                move_src_range = restrict_search_range(action, target, identifier_finder)
+                move_src_range = restrict_search_range(action, target, identifier_finder, lines)
             case _:
                 move_src_range = None
                 # Set range_spec to cover the identifier
