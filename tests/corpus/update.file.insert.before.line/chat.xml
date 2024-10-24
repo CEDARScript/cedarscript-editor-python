@@ -1,0 +1,9 @@
+<no-train>
+```CEDARScript
+UPDATE FILE "main.something"
+INSERT BEFORE LINE "parturient"
+WITH CONTENT '''
+@-4:#@-4 before line 'parturient'
+'''
+```
+</no-train>
