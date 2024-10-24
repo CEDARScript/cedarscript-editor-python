@@ -1,0 +1,33 @@
+<no-train>
+```CEDARScript
+-- Move the `convert` method from the `BaseConverter` class, placing it at the top level, just before the line where its class starts
+UPDATE CLASS "BaseConverter"
+FROM FILE "baseconv.py"
+MOVE FUNCTION "convert"
+INSERT BEFORE CLASS "BaseConverter"
+RELATIVE INDENTATION 0;
+
+-- Update the copied function to remove references to `self`
+UPDATE FUNCTION "convert"
+FROM FILE "baseconv.py"
+REPLACE LINE "def convert(self, number, from_digits, to_digits, sign):"
+WITH CONTENT '''
+@0:def convert(number, from_digits, to_digits, sign):
+''';
+
+-- Update ALL call sites of the method `convert` to call the new top-level function with the same name
+UPDATE FUNCTION "encode"
+FROM FILE "baseconv.py"
+REPLACE LINE "neg, value = self.convert(i, self.decimal_digits, self.digits, \"-\")"
+WITH CONTENT '''
+@0:neg, value = convert(i, self.decimal_digits, self.digits, "-")
+''';
+UPDATE FUNCTION "decode"
+FROM FILE "baseconv.py"
+REPLACE LINE "neg, value = self.convert(s, self.digits, self.decimal_digits, self.sign)"
+WITH CONTENT '''
+@0:neg, value = convert(s, self.digits, self.decimal_digits, self.sign)
+''';
+
+```
+</no-train>

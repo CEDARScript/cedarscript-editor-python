@@ -111,6 +111,54 @@ class IndentationInfo(NamedTuple):
         return cls(4, ' ', 0)
 
     @classmethod
+    def shift_indentation(cls,
+        content: Sequence[str], target_lines: Sequence[str], target_reference_indentation_count: int,
+        relindent_level: int | None
+    ) -> list[str]:
+        """
+        Returns 'content' with shifted indentation based on a relative indent level and a reference indentation count.
+
+        This method adjusts the indentation of each non-empty line in the input sequence.
+        It calculates the difference between the target base indentation and the minimum
+        indentation found in the content, then applies this shift to all lines.
+
+        Args:
+            content (Sequence[str]): A sequence of strings representing the lines to be adjusted.
+            target_reference_indentation_count (int): The target base indentation count to adjust to.
+            relindent_level (int|None):
+
+        Returns:
+            list[str]: A new list of strings with adjusted indentation.
+
+        Note:
+            - Empty lines and lines with only whitespace are preserved as-is.
+            - The method uses the IndentationInfo of the instance to determine
+              the indentation character and count.
+            - This method is useful for uniformly adjusting indentation across all lines.
+
+        Example:
+            >>> info = IndentationInfo(4, ' ', 1, True)
+            >>> lines = ["    def example():", "        print('Hello')"]
+            >>> info.shift_indentation(content, 8)
+            ['        def example():', '            print('Hello')']
+        """
+        context_indent_char_count = cls.from_content(target_lines).char_count
+        return (cls.
+            from_content(content).
+            _replace(char_count=context_indent_char_count).
+            _shift_indentation(
+                content, target_lines, target_reference_indentation_count, relindent_level
+            )
+        )
+
+    def _shift_indentation(self,
+        content: Sequence[str], target_lines: Sequence[str], target_base_indentation_count: int, relindent_level: int | None
+    ) -> list[str]:
+        target_base_indentation_count += self.char_count * (relindent_level or 0)
+        raw_line_adjuster = self._shift_indentation_fun(target_base_indentation_count)
+        return [raw_line_adjuster(line) for line in content]
+
+    @classmethod
     def from_content(cls, content: str | Sequence[str]) -> 'IndentationInfo':
         """
         Analyzes the indentation in the given content and creates an IndentationInfo instance.
@@ -132,14 +180,16 @@ class IndentationInfo(NamedTuple):
               character count by analyzing patterns and using GCD.
         """
         # TODO Always send str?
-        lines = [x.lstrip() for x in content.splitlines() if x.strip()] if isinstance(content, str) else content
+        lines = [x for x in content.splitlines() if x.strip()] if isinstance(content, str) else content
 
         indentations = [extract_indentation(line) for line in lines if line.strip()]
+        has_zero_indent = any((i == '' for i in indentations))
+        indentations = [indent for indent in indentations if indent]
 
         if not indentations:
             return cls(4, ' ', 0, True, "No indentation found. Assuming 4 spaces (PEP 8).")
 
-        indent_chars = Counter(indent[0] for indent in indentations if indent)
+        indent_chars = Counter(indent[0] for indent in indentations)
         dominant_char = ' ' if indent_chars.get(' ', 0) >= indent_chars.get('\t', 0) else '\t'
 
         indent_lengths = [len(indent) for indent in indentations]
@@ -148,20 +198,26 @@ class IndentationInfo(NamedTuple):
             char_count = 1
         else:
             # For spaces, determine the most likely char_count
-            space_counts = [sc for sc in indent_lengths if sc % 2 == 0 and sc > 0]
+            space_counts = [sc for sc in indent_lengths if sc % 2 == 0]
             if not space_counts:
                 char_count = 2  # Default to 2 if no even space counts
             else:
-                # Sort top 5 space counts and find the largest GCD
-                sorted_counts = sorted([c[0] for c in Counter(space_counts).most_common(5)], reverse=True)
-                char_count = sorted_counts[0]
-                for i in range(1, len(sorted_counts)):
-                    new_gcd = gcd(char_count, sorted_counts[i])
-                    if new_gcd <= 1:
-                        break
-                    char_count = new_gcd
+                unique_space_counts = sorted(set(space_counts))
+                deltas = sorted([b - a for a, b in zip(unique_space_counts, unique_space_counts[1:])], reverse=True)
+                most_common_deltas = Counter(deltas).most_common(5)
+                ratio_most_common = most_common_deltas[0][1] / len(deltas)
+                if ratio_most_common > .6:
+                    char_count = most_common_deltas[0][0]
+                else:
+                    char_count = deltas[0]
+                    # find the largest GCD
+                    for i in range(1, len(most_common_deltas)):
+                        new_gcd = gcd(char_count, most_common_deltas[i][0])
+                        if new_gcd <= 1:
+                            break
+                        char_count = new_gcd
 
-        min_indent_chars = min(indent_lengths) if indent_lengths else 0
+        min_indent_chars = 0 if has_zero_indent else min(indent_lengths) if indent_lengths else 0
         min_indent_level = min_indent_chars // char_count
 
         consistency = all(len(indent) % char_count == 0 for indent in indentations if indent)
@@ -216,42 +272,6 @@ class IndentationInfo(NamedTuple):
             str: A string of indentation characters for the given level.
         """
         return level * self.char_count * self.char
-
-    # TODO Revise
-    def shift_indentation(
-            self, lines: Sequence[str], target_base_indentation_count: int, relindent_level: int | None
-    ) -> list[str]:
-        """
-        Shift the indentation of a sequence of lines based on a target base indentation count.
-
-        This method adjusts the indentation of each non-empty line in the input sequence.
-        It calculates the difference between the target base indentation and the minimum
-        indentation found in the content, then applies this shift to all lines.
-
-        Args:
-            lines (Sequence[str]): A sequence of strings representing the lines to be adjusted.
-            target_base_indentation_count (int): The target base indentation count to adjust to.
-            relindent_level (int|None):
-
-        Returns:
-            list[str]: A new list of strings with adjusted indentation.
-
-        Note:
-            - Empty lines and lines with only whitespace are preserved as-is.
-            - The method uses the IndentationInfo of the instance to determine
-              the indentation character and count.
-            - This method is useful for uniformly adjusting indentation across all lines.
-
-        Example:
-            >>> info = IndentationInfo(4, ' ', 1, True)
-            >>> lines = ["    def example():", "        print('Hello')"]
-            >>> info.shift_indentation(lines, 8)
-            ['        def example():', '            print('Hello')']
-        """
-        target_base_indentation_count += self.char_count * (relindent_level or 0)
-        raw_line_adjuster = self._shift_indentation_fun(target_base_indentation_count)
-        # Return the transformed lines
-        return [raw_line_adjuster(line) for line in lines]
 
     def _shift_indentation_fun(self, target_base_indentation_count: int):
         # Calculate the indentation difference

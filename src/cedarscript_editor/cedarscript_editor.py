@@ -146,9 +146,8 @@ class CEDARScriptEditor:
                 content_range = restrict_search_range_for_marker(
                     region, action, lines, RangeSpec.EMPTY, identifier_finder
                 )
-                content = content_range.read(lines)
-                content = IndentationInfo.from_content(lines).update_min_indent_level(content).shift_indentation(
-                    content, search_range.indent, relindent_level
+                content = IndentationInfo.shift_indentation(
+                    content_range.read(lines), lines, search_range.indent, relindent_level
                 )
                 content = (region, content)
             case _:
@@ -158,9 +157,8 @@ class CEDARScriptEditor:
                         #     region, action, lines, RangeSpec.EMPTY, identifier_finder
                         # )
                         # TODO Are the 3 lines above needed?
-                        content = move_src_range.read(lines)
-                        content = IndentationInfo.from_content(lines).update_min_indent_level(content).shift_indentation(
-                            content, search_range.indent, relindent_level
+                        content = IndentationInfo.shift_indentation(
+                            move_src_range.read(lines), lines, search_range.indent, relindent_level
                         )
                     case DeleteClause():
                         pass
