@@ -1,0 +1,18 @@
+<no-train>
+```CEDARScript
+CREATE FILE "1.py"
+WITH CONTENT '''
+@0:def calculate_sum(a, b):
+@1:"""Calculate sum of two numbers.
+@0:
+@1:Args:
+@2:a: First number
+@2:b: Second number
+@0:
+@1:Returns:
+@2:Sum of a and b
+@1:"""
+@1:return a + b
+''';
+```
+</no-train>

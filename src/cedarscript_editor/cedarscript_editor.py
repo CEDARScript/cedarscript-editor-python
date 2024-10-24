@@ -3,7 +3,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from cedarscript_ast_parser import Command, RmFileCommand, MvFileCommand, UpdateCommand, \
-    SelectCommand, IdentifierFromFile, Segment, Marker, MoveClause, DeleteClause, \
+    SelectCommand, CreateCommand, IdentifierFromFile, Segment, Marker, MoveClause, DeleteClause, \
     InsertClause, ReplaceClause, EditingAction, BodyOrWhole, RegionClause, MarkerType
 from cedarscript_ast_parser.cedarscript_ast_parser import MarkerCompatible, RelativeMarker, \
     RelativePositionType
@@ -78,8 +78,8 @@ class CEDARScriptEditor:
                 match command:
                     case UpdateCommand() as cmd:
                         result.append(self._update_command(cmd))
-                    # case CreateCommand() as cmd:
-                    #     result.append(self._create_command(cmd))
+                    case CreateCommand() as cmd:
+                        result.append(self._create_command(cmd))
                     case RmFileCommand() as cmd:
                         result.append(self._rm_command(cmd))
                     case MvFileCommand():
@@ -255,14 +255,33 @@ class CEDARScriptEditor:
     def _delete_function(self, cmd):  # TODO
         file_path = os.path.join(self.root_path, cmd.file_path)
 
-        def _create_command(self, cmd: CreateCommand):
-            file_path = os.path.join(self.root_path, cmd.file_path)
+    def _create_command(self, cmd: CreateCommand) -> str:
+        """Handle the CREATE command to create new files with content.
+        
+        Args:
+            cmd: The CreateCommand instance containing file_path and content
             
-            os.makedirs(os.path.dirname(file_path), exist_ok=True)
-            with open(file_path, 'w') as file:
-                file.write(cmd.content)
+        Returns:
+            str: A message describing the result
             
-            return f"Created file: {cmd.file_path}"
+        Raises:
+            ValueError: If the file already exists
+        """
+        file_path = os.path.join(self.root_path, cmd.file_path)
+        
+        if os.path.exists(file_path):
+            raise ValueError(f"File already exists: {cmd.file_path}")
+            
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        
+        content = cmd.content
+        if isinstance(content, (list, tuple)):
+            content = '\n'.join(content)
+            
+        # Process relative indentation in content
+        write_file(file_path, IndentationInfo.default().apply_relative_indents(content))
+        
+        return f"Created file: {cmd.file_path}"
 
 
 def find_index_range_for_region(region: BodyOrWhole | Marker | Segment | RelativeMarker,

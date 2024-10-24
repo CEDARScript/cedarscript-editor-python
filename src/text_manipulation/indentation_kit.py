@@ -107,6 +107,10 @@ class IndentationInfo(NamedTuple):
     message: str | None = None
 
     @classmethod
+    def default(cls) -> 'IndentationInfo':
+        return cls(4, ' ', 0)
+
+    @classmethod
     def from_content(cls, content: str | Sequence[str]) -> 'IndentationInfo':
         """
         Analyzes the indentation in the given content and creates an IndentationInfo instance.
