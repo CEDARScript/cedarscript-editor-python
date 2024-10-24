@@ -123,7 +123,7 @@ class CEDARScriptEditor:
             case _:
                 move_src_range = None
                 # Set range_spec to cover the identifier
-                search_range = restrict_search_range(action, target, identifier_finder)
+                search_range = restrict_search_range(action, target, identifier_finder, lines)
 
         # UPDATE FUNCTION "_check_raw_id_fields_item"
         # FROM FILE "refactor-benchmark/checks_BaseModelAdminChecks__check_raw_id_fields_item/checks.py"
@@ -293,7 +293,7 @@ def find_marker_or_segment(
     return marker, search_range
 
 
-def restrict_search_range(action, target, identifier_finder: IdentifierFinder) -> RangeSpec:
+def restrict_search_range(action, target, identifier_finder: IdentifierFinder, lines: Sequence[str]) -> RangeSpec:
     match target:
         case IdentifierFromFile() as identifier_from_file:
             identifier_marker = identifier_from_file.as_marker
