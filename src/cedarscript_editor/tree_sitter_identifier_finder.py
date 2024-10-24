@@ -145,7 +145,7 @@ def _find_identifier(language, source: Sequence[str], tree, query_scm: dict[str,
         return None
     if candidate_count > 1 and marker.offset is None:
         raise ValueError(
-            f"There are {candidate_count} {marker.type} identifiers named `{marker.value}`. "
+            f"The {marker.type} identifier named `{marker.value}` is ambiguous (found {candidate_count} matches). "
             f"Choose an `OFFSET` between 0 and {candidate_count - 1} to determine how many to skip. "
             f"Example to reference the *last* `{marker.value}`: `OFFSET {candidate_count - 1}`"
         )

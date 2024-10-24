@@ -50,8 +50,9 @@ class CEDARScriptEditorException(Exception):
                 f"due to changes that left the file in an invalid state (check that by re-reading the file!)</note>"
             )
         super().__init__(
-            f"<error-details><error-location>COMMAND #{command_ordinal}</error-location>{note}"
-            f"<description>{description}</description>"
+            f"<error-details>\n<error-location>COMMAND #{command_ordinal}</error-location>"
+            f"\n<description>{description}</description>"
+            f"{note}"
             "<suggestion>NEVER apologize; just relax, take a deep breath, think step-by-step and write "
             "an in-depth analysis of what went wrong (specifying which command ordinal failed), "
             "then acknowledge which commands were already applied and concisely describe "

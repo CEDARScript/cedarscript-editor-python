@@ -192,10 +192,10 @@ class RangeSpec(NamedTuple):
             match_type_count = len(matches[match_type])
             if search_term.offset is None and match_type_count > 1:
                 raise ValueError(
-                    f"There are {match_type_count} lines matching `{search_term.value}`. "
-                    "Suggestions: 1) Try using a *different line* as marker (a couple lines before or after the one "
-                    "you tried); 2) If you wanted to *REPLACE* line, "
-                    "try instead to replace a *SEGMENT* of a couple of lines."
+                    f"Line marker `{search_term.value}` is ambiguous (found {match_type_count} lines matching it) "
+                    "Suggestions: 1) To disambiguate, try using a *different line* as marker (a couple lines before or "
+                    "after the one you tried); 2) If you wanted to *REPLACE* line, try instead to replace a *SEGMENT* "
+                    "a couple of lines long."
                     # f"Add an `OFFSET` (after the line marker) and a number between 0 and {match_type_count - 1}
                     # to determine how many to skip. "
                     # f"Example to reference the *last* one of those:
