@@ -101,48 +101,6 @@ class CEDARScriptEditor:
         content = cmd.content or []
         file_path = os.path.join(self.root_path, target.file_path)
 
-        # Example 1:
-        # UPDATE FILE "tmp.benchmarks/2024-10-04-22-59-58--CEDARScript-Gemini-small/bowling/bowling.py"
-        # INSERT INSIDE FUNCTION "__init__" TOP
-        # WITH CONTENT '''
-        #  @0:print("This line will be inserted at the top")
-        #  ''';
-        # After parsing ->
-        # UpdateCommand(
-        #     type='update',
-        #     target=SingleFileClause(file_path='tmp.benchmarks/2024-10-04-22-59-58--CEDARScript-Gemini-small/bowling
-        #     /bowling.py'),
-        #     action=InsertClause(insert_position=RelativeMarker(type=<MarkerType.FUNCTION: 'function'>,
-        #     value='__init__',
-        #     offset=None)),
-        #     content='\n @0:print("This line will be inserted at the top")\n '
-        # )
-
-        # Example 2:
-        # UPDATE FUNCTION
-        # FROM FILE "tmp.benchmarks/2024-10-04-22-59-58--CEDARScript-Gemini-small/bowling/bowling.py"
-        # WHERE NAME = "__init__"
-        # REPLACE SEGMENT
-        # STARTING AFTER LINE "def __init__(self):"
-        # ENDING AFTER LINE "def __init__(self):"
-        # WITH CONTENT '''
-        #  @0:print("This line will be inserted at the top")
-        #  ''';
-        # After parsing ->
-        # UpdateCommand(
-        # type='update',
-        # target=IdentifierFromFile(file_path='bowling.py',
-        # where_clause=WhereClause(field='NAME', operator='=', value='__init__'),
-        # identifier_type='FUNCTION', offset=None
-        # ),
-        # action=ReplaceClause(
-        # region=Segment(
-        # start=RelativeMarker(type=<MarkerType.LINE: 'line'>, value='def __init__(self):', offset=None),
-        # end=RelativeMarker(type=<MarkerType.LINE: 'line'>, value='def __init__(self):', offset=None)
-        # )),
-        # content='\n @0:print("This line will be inserted at the top")\n '
-        # )
-
         src = read_file(file_path)
         lines = src.splitlines()
 
@@ -348,7 +306,7 @@ def restrict_search_range(action, target, identifier_finder: IdentifierFinder) -
                         case BodyOrWhole() | RelativePositionType():
                             return identifier_boundaries.location_to_search_range(region)
                         case Marker() as inner_marker:
-                            match identifier_finder(inner_marker):
+                            match identifier_finder(inner_marker, identifier_boundaries.whole):
                                 case IdentifierBoundaries() as inner_boundaries:
                                     return inner_boundaries.whole
                                 case RangeSpec() as inner_range_spec:

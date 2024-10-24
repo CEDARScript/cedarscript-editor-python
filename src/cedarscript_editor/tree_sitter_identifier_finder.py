@@ -11,7 +11,7 @@ from .tree_sitter_identifier_queries import LANG_TO_TREE_SITTER_QUERY
 
 _log = logging.getLogger(__name__)
 
-IdentifierFinder: TypeAlias = Callable[[Marker], IdentifierBoundaries | RangeSpec | None]
+IdentifierFinder: TypeAlias = Callable[[Marker | Segment, RangeSpec | None], IdentifierBoundaries | RangeSpec | None]
 
 
 def find_identifier(source_info: tuple[str, str | Sequence[str]], search_rage: RangeSpec = RangeSpec.EMPTY) -> IdentifierFinder:
@@ -37,7 +37,7 @@ def _select_finder(file_path: str, source: str, search_range: RangeSpec = RangeS
 
     source = source.splitlines()
 
-    def find_by_marker(mos: Marker | Segment) -> IdentifierBoundaries | RangeSpec | None:
+    def find_by_marker(mos: Marker | Segment, search_range: RangeSpec | None = None) -> IdentifierBoundaries | RangeSpec | None:
         match mos:
 
             case Marker(MarkerType.LINE) | Segment():
