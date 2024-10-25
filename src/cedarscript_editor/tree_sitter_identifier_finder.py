@@ -1,4 +1,5 @@
 import logging
+from functools import cached_property
 from typing import Callable, TypeAlias, Sequence, NamedTuple, Iterable
 
 from cedarscript_ast_parser import Marker, MarkerType, Segment
@@ -64,7 +65,6 @@ def _select_finder(file_path: str, source: str, search_range: RangeSpec = RangeS
 
     source = source.splitlines()
 
-
     def find_by_marker(mos: Marker | Segment, search_range: RangeSpec | None = None) -> IdentifierBoundaries | RangeSpec | None:
         match mos:
 
@@ -119,6 +119,27 @@ class CaptureInfo(NamedTuple):
             return None
         return self.node.text.decode("utf-8")
 
+    @cached_property
+    def parents(self) -> list[tuple[str, str]]:
+        """Returns a list of (node_type, node_name) tuples representing the hierarchy.
+        The list is ordered from immediate parent to root."""
+        parents = []
+        current = self.node.parent
+
+        while current:
+            # Check if current node is a container type we care about
+            if current.type.endswith('_definition'):
+                # Try to find the name node - exact field depends on language
+                name = None
+                for child in current.children:
+                    if child.type == 'identifier' or child.type == 'name':
+                        name = child.text.decode('utf-8')
+                        break
+                parents.append((current.type, name))
+            current = current.parent
+
+        return parents
+
 
 def associate_identifier_parts(captures: Iterable[CaptureInfo], lines: Sequence[str]) -> list[IdentifierBoundaries]:
     """Associates related identifier parts (definition, body, docstring, etc) into IdentifierBoundaries.
@@ -160,6 +181,7 @@ def associate_identifier_parts(captures: Iterable[CaptureInfo], lines: Sequence[
 
 
 def find_parent_definition(node):
+    """Returns the first parent node that ends with '_definition'"""
     # TODO How to deal with 'decorated_definition' ?
     while node.parent:
         node = node.parent
