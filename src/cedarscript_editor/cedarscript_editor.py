@@ -289,6 +289,10 @@ def find_marker_or_segment(
                     # TODO Handle segment's start and end as a marker and support identifier markers
                     search_range = segment.to_search_range(lines, search_range)
                     marker = None
+                case BodyOrWhole():
+                    if search_range.end == -1:
+                        search_range = search_range._replace(end=len(lines))
+
     return marker, search_range
 
 

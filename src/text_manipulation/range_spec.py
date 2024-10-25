@@ -91,7 +91,7 @@ class RangeSpec(NamedTuple):
 
     def write(self, src: Sequence[str], target: Sequence[str]):
         """Write the source lines into the target sequence at the index position specified by this range."""
-        target[self.start:self.end] = src
+        target[self.start:self.end if self.end >= 0 else len(target)] = src
 
     def delete(self, src: Sequence[str]) -> Sequence[str]:
         """Delete the lines specified by this range from the source sequence and return the deleted lines."""
