@@ -1,0 +1,10 @@
+<no-train>
+```CEDARScript
+UPDATE FILE "1.py"
+REPLACE WHOLE
+WITH CONTENT '''
+@0:class B:
+@1:...
+'''
+```
+</no-train>
