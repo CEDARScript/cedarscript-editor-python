@@ -9,12 +9,29 @@ from tree_sitter_languages import get_language, get_parser
 
 from .tree_sitter_identifier_queries import LANG_TO_TREE_SITTER_QUERY
 
+"""
+Parser for extracting identifier information from source code using tree-sitter.
+Supports multiple languages and provides functionality to find and analyze identifiers
+like functions and classes along with their hierarchical relationships.
+"""
+
 _log = logging.getLogger(__name__)
 
+"""Type alias for functions that find identifiers in source code.
+Takes a Marker/Segment and optional RangeSpec, returns identifier boundaries or range."""
 IdentifierFinder: TypeAlias = Callable[[Marker | Segment, RangeSpec | None], IdentifierBoundaries | RangeSpec | None]
 
 
 def find_identifier(source_info: tuple[str, str | Sequence[str]], search_rage: RangeSpec = RangeSpec.EMPTY) -> IdentifierFinder:
+    """Factory function that creates an identifier finder for the given source.
+
+    Args:
+        source_info: Tuple of (file_path, source_content)
+        search_rage: Optional range to limit the search scope
+
+    Returns:
+        IdentifierFinder function configured for the given source
+    """
     file_path = source_info[0]
     source = source_info[1]
     if not isinstance(source, str):
@@ -23,6 +40,16 @@ def find_identifier(source_info: tuple[str, str | Sequence[str]], search_rage: R
 
 
 def _select_finder(file_path: str, source: str, search_range: RangeSpec = RangeSpec.EMPTY) -> IdentifierFinder:
+    """Selects and configures an appropriate identifier finder for the given file.
+
+    Args:
+        file_path: Path to the source file
+        source: Source code content
+        search_range: Optional range to limit the search scope
+
+    Returns:
+        IdentifierFinder function configured for the file type
+    """
     langstr = filename_to_lang(file_path)
     match langstr:
         case None:
@@ -36,6 +63,7 @@ def _select_finder(file_path: str, source: str, search_range: RangeSpec = RangeS
             tree = get_parser(langstr).parse(bytes(source, "utf-8"))
 
     source = source.splitlines()
+
 
     def find_by_marker(mos: Marker | Segment, search_range: RangeSpec | None = None) -> IdentifierBoundaries | RangeSpec | None:
         match mos:
@@ -58,6 +86,18 @@ def _get_by_offset(obj: Sequence, offset: int):
 
 
 class CaptureInfo(NamedTuple):
+    """Container for information about a captured node from tree-sitter parsing.
+
+    Attributes:
+        capture_type: Type of the captured node (e.g., 'function.definition')
+        node: The tree-sitter node that was captured
+
+    Properties:
+        node_type: Type of the underlying node
+        range: Tuple of (start_line, end_line)
+        identifier: Name of the identifier if this is a name capture
+        parents: List of (node_type, node_name) tuples representing the hierarchy
+    """
     capture_type: str
     node: any
 
@@ -81,6 +121,15 @@ class CaptureInfo(NamedTuple):
 
 
 def associate_identifier_parts(captures: Iterable[CaptureInfo], lines: Sequence[str]) -> list[IdentifierBoundaries]:
+    """Associates related identifier parts (definition, body, docstring, etc) into IdentifierBoundaries.
+
+    Args:
+        captures: Iterable of CaptureInfo objects representing related parts
+        lines: Sequence of source code lines
+
+    Returns:
+        List of IdentifierBoundaries with all parts associated
+    """
     identifier_map: dict[int, IdentifierBoundaries] = {}
 
     for capture in captures:
@@ -119,17 +168,19 @@ def find_parent_definition(node):
     return None
 
 
-def _find_identifier(language, source: Sequence[str], tree, query_scm: dict[str, dict[str, str]], marker: Marker) \
-        -> IdentifierBoundaries | None:
-    """
-    Find the starting line index of a specified function in the given lines.
+def _find_identifier(language, source: Sequence[str], tree, query_scm: dict[str, dict[str, str]], marker: Marker) -> IdentifierBoundaries | None:
+    """Finds an identifier in the source code using tree-sitter queries.
 
-    :param source: The original text
-    :param tree: The parsed tree from tree-sitter
-    :param query_scm: A dictionary containing queries for different types of identifiers
-    :param marker: Type, name and offset of the identifier to find.
-    :return: IdentifierBoundaries with identifier start, body start, and end lines of the identifier
-    or None if not found.
+    Args:
+        language: Tree-sitter language
+        source: List of source code lines
+        tree: Parsed tree-sitter tree
+        query_scm: Dictionary of queries for different identifier types
+        marker: Type, name and offset of the identifier to find
+
+    Returns:
+        IdentifierBoundaries with identifier IdentifierBoundaries with identifier start, body start, and end lines of the identifier
+    or None if not found
     """
     try:
         candidates = language.query(query_scm[marker.type].format(name=marker.value)).captures(tree.root_node)
@@ -160,6 +211,15 @@ def _find_identifier(language, source: Sequence[str], tree, query_scm: dict[str,
 
 
 def capture2identifier_boundaries(captures, lines: Sequence[str]) -> list[IdentifierBoundaries]:
+    """Converts raw tree-sitter captures to IdentifierBoundaries objects.
+
+    Args:
+        captures: Raw captures from tree-sitter query
+        lines: Sequence of source code lines
+
+    Returns:
+        List of IdentifierBoundaries representing the captured identifiers
+    """
     captures = [CaptureInfo(c[1], c[0]) for c in captures if not c[1].startswith('_')]
     unique_captures = {}
     for capture in captures:
