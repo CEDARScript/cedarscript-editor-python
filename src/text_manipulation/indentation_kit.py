@@ -194,28 +194,9 @@ class IndentationInfo(NamedTuple):
 
         indent_lengths = [len(indent) for indent in indentations]
 
-        if dominant_char == '\t':
-            char_count = 1
-        else:
-            # For spaces, determine the most likely char_count
-            space_counts = [sc for sc in indent_lengths if sc % 2 == 0]
-            if not space_counts:
-                char_count = 2  # Default to 2 if no even space counts
-            else:
-                unique_space_counts = sorted(set(space_counts))
-                deltas = sorted([b - a for a, b in zip(unique_space_counts, unique_space_counts[1:])], reverse=True)
-                most_common_deltas = Counter(deltas).most_common(5)
-                ratio_most_common = most_common_deltas[0][1] / len(deltas)
-                if ratio_most_common > .6:
-                    char_count = most_common_deltas[0][0]
-                else:
-                    char_count = deltas[0]
-                    # find the largest GCD
-                    for i in range(1, len(most_common_deltas)):
-                        new_gcd = gcd(char_count, most_common_deltas[i][0])
-                        if new_gcd <= 1:
-                            break
-                        char_count = new_gcd
+        char_count = 1
+        if dominant_char != '\t':
+            char_count = cls.calc_space_count_for_indent(indent_lengths)
 
         min_indent_chars = 0 if has_zero_indent else min(indent_lengths) if indent_lengths else 0
         min_indent_level = min_indent_chars // char_count
@@ -233,6 +214,33 @@ class IndentationInfo(NamedTuple):
             message += " (inconsistent)"
 
         return cls(char_count, dominant_char, min_indent_level, consistency, message)
+
+    @staticmethod
+    def calc_space_count_for_indent(indent_lengths: Sequence[int]) -> int:
+        # For spaces, determine the most likely char_count
+        space_counts = [sc for sc in indent_lengths if sc % 2 == 0]
+        if not space_counts:
+            return 2  # Default to 2 if no even space counts
+
+        unique_space_counts = sorted(set(space_counts))
+        if len(unique_space_counts) == 1:
+            return unique_space_counts[0]
+
+        deltas = sorted([b - a for a, b in zip(unique_space_counts, unique_space_counts[1:])], reverse=True)
+        most_common_deltas = Counter(deltas).most_common(5)
+        ratio_most_common = most_common_deltas[0][1] / len(deltas)
+        if ratio_most_common > .6:
+            return most_common_deltas[0][0]
+
+        # Resort to GCD
+        result = deltas[0]
+        # find the largest GCD
+        for i in range(1, len(most_common_deltas)):
+            new_gcd = gcd(result, most_common_deltas[i][0])
+            if new_gcd <= 1:
+                break
+            result = new_gcd
+        return result
 
     def update_min_indent_level(self, content: str | Sequence[str]) -> 'IndentationInfo':
         return self._replace(min_indent_level=IndentationInfo.from_content(content).min_indent_level)
