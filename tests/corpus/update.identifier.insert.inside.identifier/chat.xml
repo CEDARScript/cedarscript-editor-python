@@ -1,0 +1,12 @@
+<no-train>
+```CEDARScript
+UPDATE CLASS "A"
+FROM FILE "1.py"
+INSERT INSIDE FUNCTION "__init__" BOTTOM
+WITH CONTENT '''
+@-1:def m1(self):
+@0:pass
+''';
+
+```
+</no-train>

@@ -118,8 +118,8 @@ class CEDARScriptEditor:
                 move_src_range = None
                 # Set range_spec to cover the identifier
                 match action:
-                    case RegionClause(region=region):
-                        search_range = restrict_search_range(action.region, target, identifier_finder, lines)
+                    case RegionClause(region=region) | InsertClause(insert_position=region):
+                        search_range = restrict_search_range(region, target, identifier_finder, lines)
 
         # UPDATE FUNCTION "_check_raw_id_fields_item"
         # FROM FILE "refactor-benchmark/checks_BaseModelAdminChecks__check_raw_id_fields_item/checks.py"
@@ -137,9 +137,9 @@ class CEDARScriptEditor:
                     pass
                 case _:
                     marker, search_range = find_marker_or_segment(action, lines, search_range)
-                    search_range = restrict_search_range_for_marker(
-                        marker, action, lines, search_range, identifier_finder
-                    )
+                    match action:
+                        case InsertClause():
+                            search_range = search_range.set_line_count(0).inc()
 
         match content:
             case str() | [str(), *_] | (str(), *_):
@@ -343,24 +343,22 @@ def restrict_search_range_for_marker(
         return search_range
 
     match marker:
+        case Marker(type=MarkerType.LINE):
+            search_range = marker.to_search_range(lines, search_range)
+            match action:
+                case InsertClause():
+                    if action.insert_position.qualifier == RelativePositionType.BEFORE:
+                        search_range = search_range.inc()
+                case RegionClause():
+                    search_range = search_range.set_line_count(1)
         case Marker():
-            match marker.type:
-                case MarkerType.LINE:
-                    search_range = marker.to_search_range(lines, search_range)
-                    match action:
-                        case InsertClause():
-                            if action.insert_position.qualifier == RelativePositionType.BEFORE:
-                                search_range = search_range.inc()
-                        case RegionClause():
-                            search_range = search_range.set_line_count(1)
-                case _:
-                    identifier_boundaries = identifier_finder(marker)
-                    if not identifier_boundaries:
-                        raise ValueError(f"'{marker}' not found")
-                    qualifier: RelativePositionType = marker.qualifier if isinstance(
-                        marker, RelativeMarker
-                    ) else RelativePositionType.AT
-                    search_range = identifier_boundaries.location_to_search_range(qualifier)
+            identifier_boundaries = identifier_finder(marker)
+            if not identifier_boundaries:
+                raise ValueError(f"'{marker}' not found")
+            qualifier: RelativePositionType = marker.qualifier if isinstance(
+                marker, RelativeMarker
+            ) else RelativePositionType.AT
+            search_range = identifier_boundaries.location_to_search_range(qualifier)
         case Segment():
             pass  # TODO
     return search_range
