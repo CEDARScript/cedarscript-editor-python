@@ -1,0 +1,9 @@
+<no-train>
+```CEDARScript
+UPDATE CLASS "B"
+FROM FILE "1.py"
+MOVE FUNCTION "m1"
+INSERT BEFORE CLASS "C"
+RELATIVE INDENTATION 1;
+```
+</no-train>

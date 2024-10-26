@@ -1,0 +1,11 @@
+<no-train>
+```CEDARScript
+UPDATE CLASS "B"
+FROM FILE "1.py"
+REPLACE FUNCTION "__init__"
+WITH CONTENT '''
+@0:def __init__(self):
+@1:pass  # OK
+''';
+```
+</no-train>
