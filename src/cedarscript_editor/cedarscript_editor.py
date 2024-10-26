@@ -6,12 +6,12 @@ from cedarscript_ast_parser import Command, RmFileCommand, MvFileCommand, Update
     SelectCommand, CreateCommand, IdentifierFromFile, Segment, Marker, MoveClause, DeleteClause, \
     InsertClause, ReplaceClause, EditingAction, BodyOrWhole, RegionClause, MarkerType
 from cedarscript_ast_parser.cedarscript_ast_parser import MarkerCompatible, RelativeMarker, \
-    RelativePositionType
+    RelativePositionType, Region, SingleFileClause
 from text_manipulation import (
     IndentationInfo, IdentifierBoundaries, RangeSpec, read_file, write_file, bow_to_search_range
 )
 
-from .tree_sitter_identifier_finder import IdentifierFinder, find_identifier
+from .tree_sitter_identifier_finder import IdentifierFinder
 
 
 class CEDARScriptEditorException(Exception):
@@ -105,26 +105,21 @@ class CEDARScriptEditor:
         src = read_file(file_path)
         lines = src.splitlines()
 
-        source_info: tuple[str | bytes, str | Sequence[str]] = (file_path, src)
+        identifier_finder = IdentifierFinder(file_path, src, RangeSpec.EMPTY)
 
-        identifier_finder = find_identifier(source_info)
-
-        # TODO test...
-
+        search_range = RangeSpec.EMPTY
         match action:
             case MoveClause():
-                # (Check parse_update_command)
-                # when action=MoveClause example (MOVE roll TO AFTER score):
-                #   action.deleteclause.region=WHOLE
-                #   action.as_marker = action.insertclause.as_marker
-                #   action.insertclause.insert_position=FUNCTION(score)
-                #   target.as_marker = FUNCTION(roll) (the one to delete)
-                search_range = RangeSpec.EMPTY
-                move_src_range = restrict_search_range(action, target, identifier_finder, lines)
+                # READ + DELETE region  : action.region (PARENT RESTRICTION: target.as_marker)
+                move_src_range = restrict_search_range(action.region, target, identifier_finder, lines)
+                # WRITE region: action.insert_position
+                search_range = restrict_search_range(action.insert_position, None, identifier_finder, lines)
             case _:
                 move_src_range = None
                 # Set range_spec to cover the identifier
-                search_range = restrict_search_range(action, target, identifier_finder, lines)
+                match action:
+                    case RegionClause(region=region):
+                        search_range = restrict_search_range(action.region, target, identifier_finder, lines)
 
         # UPDATE FUNCTION "_check_raw_id_fields_item"
         # FROM FILE "refactor-benchmark/checks_BaseModelAdminChecks__check_raw_id_fields_item/checks.py"
@@ -134,11 +129,17 @@ class CEDARScriptEditor:
         # ''';
         # target = IdentifierFromFile(file_path='refactor-benchmark/checks_BaseModelAdminChecks__check_raw_id_fields_item/checks.py', identifier_type=<MarkerType.FUNCTION: 'function'>, name='_check_raw_id_fields_item', where_clause=None, offset=None)
         # action = ReplaceClause(region=Marker(type=<MarkerType.LINE: line>, value=def _check_raw_id_fields_item(self, obj, field_name, label):, offset=None))
-        if search_range.line_count and not isinstance(action.region if hasattr(action, 'region') else None, Segment):
-            marker, search_range = find_marker_or_segment(action, lines, search_range)
-            search_range = restrict_search_range_for_marker(
-                marker, action, lines, search_range, identifier_finder
-            )
+        if search_range.line_count:
+            match action:
+                case RegionClause(region=Segment()):
+                    pass
+                case RegionClause(region=Marker()) if action.region.type in [MarkerType.FUNCTION, MarkerType.METHOD, MarkerType.CLASS]:
+                    pass
+                case _:
+                    marker, search_range = find_marker_or_segment(action, lines, search_range)
+                    search_range = restrict_search_range_for_marker(
+                        marker, action, lines, search_range, identifier_finder
+                    )
 
         match content:
             case str() | [str(), *_] | (str(), *_):
@@ -263,7 +264,7 @@ def find_index_range_for_region(region: BodyOrWhole | Marker | Segment | Relativ
                             pass
                         case _:
                             # TODO transform to RangeSpec
-                            mos = find_identifier(("TODO?.py", lines))(mos).body
+                            mos = IdentifierFinder("TODO?.py", lines, RangeSpec.EMPTY)(mos, search_range).body
             index_range = mos.to_search_range(
                 lines,
                 search_range.start if search_range else 0,
@@ -296,28 +297,38 @@ def find_marker_or_segment(
     return marker, search_range
 
 
-def restrict_search_range(action, target, identifier_finder: IdentifierFinder, lines: Sequence[str]) -> RangeSpec:
-    match target:
-        case IdentifierFromFile() as identifier_from_file:
-            identifier_marker = identifier_from_file.as_marker
-            identifier_boundaries = identifier_finder(identifier_marker)
-            if not identifier_boundaries:
-                raise ValueError(f"'{identifier_marker}' not found")
-            match action:
-                case RegionClause(region=region):
-                    match region:
-                        case BodyOrWhole() | RelativePositionType():
-                            return identifier_boundaries.location_to_search_range(region)
-                        case Marker() as inner_marker:
-                            match identifier_finder(inner_marker, identifier_boundaries.whole):
-                                case IdentifierBoundaries() as inner_boundaries:
-                                    return inner_boundaries.whole
-                                case RangeSpec() as inner_range_spec:
-                                    return inner_range_spec
-                        case Segment() as segment:
-                            return segment.to_search_range(lines, identifier_boundaries.whole)
-                        case _ as invalid:
-                            raise ValueError(f'Unsupported region type: {type(invalid)}')
+def restrict_search_range(
+        region: Region, parent_restriction: any,
+        identifier_finder: IdentifierFinder, lines: Sequence[str]
+) -> RangeSpec:
+    identifier_boundaries = None
+    match parent_restriction:
+        case IdentifierFromFile():
+            identifier_boundaries = identifier_finder(parent_restriction.as_marker)
+    match region:
+        case BodyOrWhole() | RelativePositionType():
+            match parent_restriction:
+                case IdentifierFromFile():
+                    match identifier_boundaries:
+                        case None:
+                            raise ValueError(f"'{parent_restriction}' not found")
+                case SingleFileClause():
+                    return RangeSpec.EMPTY
+                case None:
+                    raise ValueError(f"'{region}' requires parent_restriction")
+                case _:
+                    raise ValueError(f"'{region}' isn't compatible with {parent_restriction}")
+            return identifier_boundaries.location_to_search_range(region)
+        case Marker() as inner_marker:
+            match identifier_finder(inner_marker, identifier_boundaries.whole if identifier_boundaries is not None else None):
+                case IdentifierBoundaries() as inner_boundaries:
+                    return inner_boundaries.location_to_search_range(BodyOrWhole.WHOLE)
+                case RangeSpec() as inner_range_spec:
+                    return inner_range_spec
+        case Segment() as segment:
+            return segment.to_search_range(lines, identifier_boundaries.whole if identifier_boundaries is not None else None)
+        case _ as invalid:
+            raise ValueError(f'Unsupported region type: {type(invalid)}')
     return RangeSpec.EMPTY
 
 

@@ -11,11 +11,12 @@ and manipulating text within those ranges. The main components are:
 
 import re
 from collections.abc import Sequence
-from typing import NamedTuple
+from typing import NamedTuple, TypeAlias
 from functools import total_ordering
 
 
 from cedarscript_ast_parser import Marker, RelativeMarker, RelativePositionType, MarkerType, BodyOrWhole
+
 from .indentation_kit import get_line_indent_count
 
 MATCH_TYPES = ('exact', 'stripped', 'normalized', 'partial')
@@ -43,20 +44,43 @@ class RangeSpec(NamedTuple):
         return (f'{self.start}:{self.end}' if self.as_index is None else f'%{self.as_index}') + f'@{self.indent}'
 
     def __lt__(self, other):
-        """Compare if this range is strictly before another range."""
-        return self.end < other.start
+        """Compare if this range is strictly before another range or int."""
+        match other:
+            case int():
+                return self.end <= other
+            case RangeSpec():
+                return self.end <= other.start
 
     def __le__(self, other):
         """Compare if this range is before or adjacent to another range."""
-        return self.end <= other.start
+        match other:
+            case int():
+                return self.end <= other - 1
+            case RangeSpec():
+                return self.end <= other.start - 1
 
     def __gt__(self, other):
         """Compare if this range is strictly after another range."""
-        return self.start > other.end
+        match other:
+            case int():
+                return self.start > other
+            case RangeSpec():
+                return self.start >= other.end
 
     def __ge__(self, other):
         """Compare if this range is after or adjacent to another range."""
-        return self.start >= other.end
+        match other:
+            case int():
+                return self.start >= other
+            case RangeSpec():
+                return self.start >= other.end - 1
+
+    def __contains__(self, item):
+        match item:
+            case int():
+                return self.start <= item < self.end
+            case RangeSpec():
+                return self == RangeSpec.EMPTY or item != RangeSpec.EMPTY and self.start <= item.start and item.end <= self.end
 
     @property
     def line_count(self):
@@ -235,6 +259,12 @@ class RangeSpec(NamedTuple):
 RangeSpec.EMPTY = RangeSpec(0, -1, 0)
 
 
+class ParentInfo(NamedTuple):
+    parent_name: str
+    parent_type: str
+
+ParentRestriction: TypeAlias = RangeSpec | str | None
+
 class IdentifierBoundaries(NamedTuple):
     """
     Represents the boundaries of an identifier in code, including its whole range and body range.
@@ -251,6 +281,7 @@ class IdentifierBoundaries(NamedTuple):
     body: RangeSpec | None = None
     docstring: RangeSpec | None = None
     decorators: list[RangeSpec] = []
+    parents: list[ParentInfo] = []
 
     def __str__(self):
         return f'IdentifierBoundaries({self.whole} (BODY: {self.body}) )'
@@ -269,6 +300,18 @@ class IdentifierBoundaries(NamedTuple):
     def end_line(self) -> int:
         """Return the 1-indexed end line of the whole identifier."""
         return self.whole.end
+
+    def match_parent(self, parent_restriction: ParentRestriction) -> bool:
+        match parent_restriction:
+            case None:
+                return True
+            case RangeSpec():
+                return self.whole in parent_restriction
+            case str() as parent_name:
+                # TODO Implement advanced query syntax
+                return parent_name in [p.parent_name for p in self.parents]
+            case _:
+                raise ValueError(f'Invalid parent restriction: {parent_restriction}')
 
     def location_to_search_range(self, location: BodyOrWhole | RelativePositionType) -> RangeSpec:
         """
