@@ -166,7 +166,7 @@ class RangeSpec(NamedTuple):
             - The method prioritizes match types in the order: exact, stripped, normalized, partial.
             - The offset is considered separately for each match type.
         """
-        search_start_index, search_end_index, _ = search_range if search_range is not None else (0, -1, 0)
+        search_start_index, search_end_index, _ = search_range if search_range is not None else RangeSpec.EMPTY
         search_line = search_term.value
         assert search_line, "Empty marker"
         assert search_term.type == MarkerType.LINE, f"Invalid marker type: {search_term.type}"

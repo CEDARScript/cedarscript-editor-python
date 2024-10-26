@@ -1,0 +1,12 @@
+<no-train>
+```CEDARScript
+UPDATE FILE "1.py"
+REPLACE SEGMENT
+STARTING AFTER LINE "self.b = b"
+ENDING AT LINE "pass #"
+WITH CONTENT '''
+@-1:def ok(self):
+@0:pass # OK
+''';
+```
+</no-train>

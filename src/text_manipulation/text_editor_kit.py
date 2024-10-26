@@ -170,6 +170,9 @@ def segment_to_search_range(
     """
     assert len(lines), "`lines` is empty"
 
+    match search_range:
+        case None:
+            search_range = RangeSpec.EMPTY
     start_match_result = RangeSpec.from_line_marker(lines, start_relpos, search_range)
     assert start_match_result, (
         f"Unable to find segment start: {start_relpos}; Try: "
