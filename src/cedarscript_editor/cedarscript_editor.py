@@ -325,6 +325,10 @@ def restrict_search_range(
                     return inner_boundaries.location_to_search_range(BodyOrWhole.WHOLE)
                 case RangeSpec() as inner_range_spec:
                     return inner_range_spec
+                case None:
+                    raise ValueError(f"Unable to find {region}")
+                case _ as invalid:
+                    raise ValueError(f'Invalid: {invalid}')
         case Segment() as segment:
             return segment.to_search_range(lines, identifier_boundaries.whole if identifier_boundaries is not None else None)
         case _ as invalid:

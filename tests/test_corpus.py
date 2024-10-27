@@ -1,4 +1,4 @@
-import os
+import re
 import shutil
 import tempfile
 import pytest
@@ -65,23 +65,38 @@ def test_corpus(editor: CEDARScriptEditor, test_case: str):
         # Find and apply commands
         commands = list(find_commands(chat_xml))
         assert commands, "No commands found in chat.xml"
-        editor.apply_commands(commands)
+        
+        # Check if test expects an exception
+        throws_match = re.search(r'<throws value="([^"]+)">', chat_xml)
+        if throws_match:
+            expected_error = throws_match.group(1)
+            with pytest.raises(Exception) as excinfo:
+                editor.apply_commands(commands)
+            # TODO excinfo.value is '<description>Unable to find function 'does-not-exist'</description>'
+            actual_error = str(excinfo.value)
+            match re.search(r'<description>(.+)</description>', actual_error):
+                case None:
+                    pass
+                case _ as found:
+                    actual_error = found.group(1)
+            assert actual_error == expected_error, f"Expected error '{expected_error}', but got '{actual_error}'"
+        else:
+            editor.apply_commands(commands)
 
-        # For each file in the scratch directory, check its expected version
         def check_expected_files(dir_path: Path):
             for path in dir_path.iterdir():
                 if path.is_dir():
                     check_expected_files(path)
-                else:
-                    # Find corresponding expected file in test directory
-                    rel_path = path.relative_to(editor.root_path)
-                    expected_file = test_dir / f"expected.{rel_path}"
-                    assert expected_file.exists(), f"Expected file not found: {expected_file}"
+                    continue
+                # Find corresponding expected file in test directory
+                rel_path = path.relative_to(editor.root_path)
+                expected_file = test_dir / f"expected.{rel_path}"
+                assert expected_file.exists(), f"Expected file not found: {expected_file}"
 
-                    expected_content = f"[{rel_path}] \n" + expected_file.read_text()
-                    result_content = f"[{rel_path}] \n" + path.read_text()
-                    assert result_content.strip() == expected_content.strip(), \
-                        f"Output does not match expected content for {rel_path}"
+                expected_content = f"[{rel_path}] \n" + expected_file.read_text()
+                result_content = f"[{rel_path}] \n" + path.read_text()
+                assert result_content.strip() == expected_content.strip(), \
+                    f"Output does not match expected content for {rel_path}"
 
         check_expected_files(editor.root_path)
 

@@ -1,0 +1,10 @@
+<no-train>
+```CEDARScript
+UPDATE FILE "2.py" DELETE FUNCTION "i_exist";
+```
+    <throws value="Unable to find function 'does-not-exist'">
+```CEDARScript
+UPDATE FILE "1.py" DELETE FUNCTION "does-not-exist";
+```
+    </throws>
+</no-train>
