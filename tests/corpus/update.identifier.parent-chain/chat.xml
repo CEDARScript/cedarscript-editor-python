@@ -1,0 +1,11 @@
+<no-train>
+```CEDARScript
+UPDATE METHOD "Parent2OfB.B.calculate"
+FROM FILE "1.py"
+REPLACE LINE 1
+WITH CONTENT '''
+@0:def calculate(self, line_1,
+@1:line_2,
+''';
+```
+</no-train>

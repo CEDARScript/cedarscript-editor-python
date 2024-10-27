@@ -106,20 +106,17 @@ class CEDARScriptEditor:
         lines = src.splitlines()
 
         identifier_finder = IdentifierFinder(file_path, src, RangeSpec.EMPTY)
-
+            
         search_range = RangeSpec.EMPTY
+        move_src_range = None
         match action:
             case MoveClause():
                 # READ + DELETE region  : action.region (PARENT RESTRICTION: target.as_marker)
                 move_src_range = restrict_search_range(action.region, target, identifier_finder, lines)
                 # WRITE region: action.insert_position
                 search_range = restrict_search_range(action.insert_position, None, identifier_finder, lines)
-            case _:
-                move_src_range = None
-                # Set range_spec to cover the identifier
-                match action:
-                    case RegionClause(region=region) | InsertClause(insert_position=region):
-                        search_range = restrict_search_range(region, target, identifier_finder, lines)
+            case RegionClause(region=region) | InsertClause(insert_position=region):
+                search_range = restrict_search_range(region, target, identifier_finder, lines)
 
         # UPDATE FUNCTION "_check_raw_id_fields_item"
         # FROM FILE "refactor-benchmark/checks_BaseModelAdminChecks__check_raw_id_fields_item/checks.py"

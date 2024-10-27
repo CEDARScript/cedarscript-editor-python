@@ -79,19 +79,40 @@ class IdentifierFinder:
         or None if not found
         """
         query_info_key = marker.type
+        identifier_name = marker.value
         match marker.type:
             case 'method':
                 query_info_key = 'function'
         try:
-            candidates = (
-                self.language.query(self.query_info[query_info_key].format(name=marker.value))
+            all_restrictions: list[ParentRestriction] = [parent_restriction]
+            # Extract parent name if using dot notation
+            if '.' in identifier_name:
+                *parent_parts, identifier_name = identifier_name.split('.')
+                all_restrictions.append("." + '.'.join(reversed(parent_parts)))
+
+            # Get all node candidates first
+            candidate_nodes = (
+                self.language.query(self.query_info[query_info_key].format(name=identifier_name))
                 .captures(self.tree.root_node)
             )
-            # TODO discard candidates that aren't of type 'marker.type'
-            candidates: list[IdentifierBoundaries] = [ib for ib in capture2identifier_boundaries(
-                candidates,
-                self.lines
-            ) if ib.match_parent(parent_restriction)]
+            if not candidate_nodes:
+                return None
+
+            # Convert captures to boundaries and filter by parent
+            candidates: list[IdentifierBoundaries] = []
+            for ib in capture2identifier_boundaries(candidate_nodes, self.lines):
+                # For methods, verify the immediate parent is a class
+                if marker.type == 'method':
+                    if not ib.parents or not ib.parents[0].parent_type.startswith('class'):
+                        continue
+                # Check parent restriction (e.g., specific class name)
+                candidate_matched_all_restrictions = True
+                for pr in all_restrictions:
+                    if not ib.match_parent(pr):
+                        candidate_matched_all_restrictions = False
+                        break
+                if candidate_matched_all_restrictions:
+                    candidates.append(ib)
         except Exception as e:
             raise ValueError(f"Unable to capture nodes for {marker}: {e}") from e
 
@@ -100,13 +121,13 @@ class IdentifierFinder:
             return None
         if candidate_count > 1 and marker.offset is None:
             raise ValueError(
-                f"The {marker.type} identifier named `{marker.value}` is ambiguous (found {candidate_count} matches). "
+                f"The {marker.type} identifier named `{identifier_name}` is ambiguous (found {candidate_count} matches). "
                 f"Choose an `OFFSET` between 0 and {candidate_count - 1} to determine how many to skip. "
-                f"Example to reference the *last* `{marker.value}`: `OFFSET {candidate_count - 1}`"
+                f"Example to reference the *last* `{identifier_name}`: `OFFSET {candidate_count - 1}`"
             )
         if marker.offset and marker.offset >= candidate_count:
             raise ValueError(
-                f"There are only {candidate_count} {marker.type} identifiers named `{marker.value}`, "
+                f"There are only {candidate_count} {marker.type} identifiers named `{identifier_name}`, "
                 f"but 'OFFSET' was set to {marker.offset} (you can skip at most {candidate_count - 1} of those)"
             )
         candidates.sort(key=lambda x: x.whole.start)

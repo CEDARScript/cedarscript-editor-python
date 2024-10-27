@@ -372,9 +372,23 @@ class IdentifierBoundaries(NamedTuple):
                 return True
             case RangeSpec():
                 return self.whole in parent_restriction
-            case str() as parent_name:
-                # TODO Implement advanced query syntax
-                return parent_name in [p.parent_name for p in self.parents]
+            case str() as parent_spec:
+                # Parent chain matching: Handle dot notation for parent relationships
+                parent_chain = parent_spec.split('.')
+                if len(parent_chain) == 1:
+                    # Simple case - just check if name is any of the parents
+                    return parent_spec in [p.parent_name for p in self.parents]
+                parent_chain = [p for p in parent_chain if p]
+                if len(parent_chain) > len(self.parents):
+                    return False
+                # len(parent_chain) <= len(self.parents)
+                # Check parent chain partially matches (
+                #   sub-chain match when there are fewer items in 'parent_chain' than in 'self.parents'
+                # )
+                return all(
+                    expected == actual.parent_name
+                    for expected, actual in zip(parent_chain, self.parents)
+                )
             case _:
                 raise ValueError(f'Invalid parent restriction: {parent_restriction}')
 
