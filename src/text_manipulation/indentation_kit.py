@@ -20,6 +20,10 @@ from math import gcd
 from typing import NamedTuple
 
 
+def get_line_indent_count_from_lines(lines: Sequence[str], index: int) -> int:
+    return get_line_indent_count(lines[index])
+
+
 def get_line_indent_count(line: str) -> int:
     """
     Count the number of leading whitespace characters in a line.

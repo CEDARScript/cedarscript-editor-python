@@ -17,7 +17,7 @@ from functools import total_ordering
 
 from cedarscript_ast_parser import Marker, RelativeMarker, RelativePositionType, MarkerType, BodyOrWhole
 
-from .indentation_kit import get_line_indent_count
+from .indentation_kit import get_line_indent_count_from_lines
 
 MATCH_TYPES = ('exact', 'stripped', 'normalized', 'partial')
 
@@ -190,25 +190,71 @@ class RangeSpec(NamedTuple):
             f"must be less than or equal to line count ({len(lines)})"
         )
 
+        marker_subtype = (search_term.marker_subtype or "").casefold()
+
+        match marker_subtype:
+            case 'number':  # Simple case: a line number
+                index = int(stripped_search) - 1
+                assert 0 <= index < len(lines), (
+                    f"Line number {stripped_search} out of bounds "
+                    f"(must be in interval [1, {len(lines)}])"
+                )
+                reference_indent = get_line_indent_count_from_lines(lines, index)
+                index += calc_index_delta_for_relative_position(search_term)
+                return cls(index, index, reference_indent)
+
+            case 'regex':
+                try:
+                    pattern = re.compile(search_line)
+                except re.error as e:
+                    raise ValueError(f"Invalid regex pattern '{search_line}': {e}")
+
+            case _:
+                pattern = None
+
+        # Not a line number, so we need to find all line matches
         for i in range(search_start_index, search_end_index):
+            reference_indent = get_line_indent_count_from_lines(lines, i)
+
             line = lines[i]
-            reference_indent = get_line_indent_count(line)
+            match marker_subtype:
 
-            # Check for exact match
-            if search_line == line:
-                matches['exact'].append((i, reference_indent))
+                case 'regex':
+                    if pattern.search(line) or pattern.search(line.strip()):
+                        matches['exact'].append((i, reference_indent))
 
-            # Check for stripped match
-            elif stripped_search == line.strip():
-                matches['stripped'].append((i, reference_indent))
+                case 'prefix':
+                    # Check for stripped prefix match
+                    if line.strip().startswith(stripped_search):
+                        matches['exact'].append((i, reference_indent))
+                    # Check for normalized prefix match
+                    elif cls.normalize_line(line).startswith(normalized_search_line):
+                        matches['normalized'].append((i, reference_indent))
 
-            # Check for normalized match
-            elif normalized_search_line == cls.normalize_line(line):
-                matches['normalized'].append((i, reference_indent))
+                case 'suffix':
+                    # Check for stripped suffix match
+                    if line.strip().endswith(stripped_search):
+                        matches['exact'].append((i, reference_indent))
+                    # Check for normalized suffix match
+                    elif cls.normalize_line(line).endswith(normalized_search_line):
+                        matches['normalized'].append((i, reference_indent))
 
-            # Dangerous! Last resort!
-            elif normalized_search_line.casefold() in cls.normalize_line(line).casefold():
-                matches['partial'].append((i, reference_indent))
+                case _:
+                    # Check for exact match
+                    if search_line == line:
+                        matches['exact'].append((i, reference_indent))
+
+                    # Check for stripped match
+                    elif stripped_search == line.strip():
+                        matches['stripped'].append((i, reference_indent))
+
+                    # Check for normalized match
+                    elif normalized_search_line == cls.normalize_line(line):
+                        matches['normalized'].append((i, reference_indent))
+
+                    # Dangerous! Last resort!
+                    elif normalized_search_line.casefold() in cls.normalize_line(line).casefold():
+                        matches['partial'].append((i, reference_indent))
 
         offset = search_term.offset or 0
         max_match_count = max([len(m) for m in matches.values()])
@@ -241,16 +287,7 @@ class RangeSpec(NamedTuple):
                     case 'partial':
                         print(f"Note: Won't accept {match_type} match at index {index} for {search_term}")
                         continue
-                if isinstance(search_term, RelativeMarker):
-                    match search_term.qualifier:
-                        case RelativePositionType.BEFORE:
-                            index += -1
-                        case RelativePositionType.AFTER:
-                            index += 1
-                        case RelativePositionType.AT:
-                            pass
-                        case _ as invalid:
-                            raise ValueError(f"Not implemented: {invalid}")
+                index += calc_index_delta_for_relative_position(search_term)
                 return cls(index, index, reference_indent)
 
         return None
@@ -259,11 +296,28 @@ class RangeSpec(NamedTuple):
 RangeSpec.EMPTY = RangeSpec(0, -1, 0)
 
 
+def calc_index_delta_for_relative_position(marker: Marker):
+    match marker:
+        case RelativeMarker(qualifier=RelativePositionType.BEFORE):
+            return -1
+        case RelativeMarker(qualifier=RelativePositionType.AFTER):
+            return 1
+        case RelativeMarker(qualifier=RelativePositionType.AT):
+            pass
+        case RelativeMarker(qualifier=invalid):
+            raise ValueError(f"Not implemented: {invalid}")
+        case _:
+            pass
+    return 0
+
+
 class ParentInfo(NamedTuple):
     parent_name: str
     parent_type: str
 
+
 ParentRestriction: TypeAlias = RangeSpec | str | None
+
 
 class IdentifierBoundaries(NamedTuple):
     """
