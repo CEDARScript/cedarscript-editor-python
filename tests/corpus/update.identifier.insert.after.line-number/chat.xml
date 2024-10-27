@@ -1,6 +1,6 @@
 <no-train>
 ```CEDARScript
-UPDATE CLASS "B"
+UPDATE METHOD "calculate" OFFSET 1
 FROM FILE "1.py"
 REPLACE LINE 1
 WITH CONTENT '''

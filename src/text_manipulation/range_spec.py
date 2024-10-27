@@ -193,12 +193,23 @@ class RangeSpec(NamedTuple):
         marker_subtype = (search_term.marker_subtype or "").casefold()
 
         match marker_subtype:
-            case 'number':  # Simple case: a line number
-                index = int(stripped_search) - 1
-                assert 0 <= index < len(lines), (
-                    f"Line number {stripped_search} out of bounds "
-                    f"(must be in interval [1, {len(lines)}])"
-                )
+            case 'number':  # Line number relative to search range
+                relative_index = int(stripped_search) - 1
+                if search_range:
+                    # Make index relative to search range start
+                    index = search_range.start + relative_index
+                    assert search_range.start <= index < search_range.end, (
+                        f"Line number {stripped_search} out of bounds "
+                        f"(must be in interval [1, {search_range.end - search_range.start}] "
+                        f"relative to context)"
+                    )
+                else:
+                    # No context - use absolute file line number
+                    index = relative_index
+                    assert 0 <= index < len(lines), (
+                        f"Line number {stripped_search} out of bounds "
+                        f"(must be in interval [1, {len(lines)}])"
+                    )
                 reference_indent = get_line_indent_count_from_lines(lines, index)
                 index += calc_index_delta_for_relative_position(search_term)
                 return cls(index, index, reference_indent)
