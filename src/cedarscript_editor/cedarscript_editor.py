@@ -138,8 +138,14 @@ class CEDARScriptEditor:
                 case _:
                     marker, search_range = find_marker_or_segment(action, lines, search_range)
                     match action:
-                        case InsertClause():
-                            search_range = search_range.set_line_count(0).inc()
+                        case InsertClause(insert_position=RelativeMarker(
+                            qualifier=qualifier)
+                        ):
+                            # TODO Handle BEFORE AFTER INSIDE_TOP INSIDE_BOTTOM
+                            search_range = search_range.set_line_count(0)
+                            if qualifier != RelativePositionType.AFTER:
+                                search_range = search_range.inc()
+
 
         match content:
             case str() | [str(), *_] | (str(), *_):

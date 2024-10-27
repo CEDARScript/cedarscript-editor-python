@@ -1,0 +1,14 @@
+<no-train>
+```CEDARScript
+UPDATE FUNCTION "fun1"
+FROM FILE "1.py"
+INSERT AFTER LINE "def fun1(a, b):"
+WITH CONTENT '''
+@1:"""Docstring...
+@0:
+@1:Args:
+@2:a
+@1:"""
+''';
+```
+</no-train>
