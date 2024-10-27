@@ -78,8 +78,16 @@ class IdentifierFinder:
             IdentifierBoundaries with identifier IdentifierBoundaries with identifier start, body start, and end lines of the identifier
         or None if not found
         """
+        query_info_key = marker.type
+        match marker.type:
+            case 'method':
+                query_info_key = 'function'
         try:
-            candidates = self.language.query(self.query_info[marker.type].format(name=marker.value)).captures(self.tree.root_node)
+            candidates = (
+                self.language.query(self.query_info[query_info_key].format(name=marker.value))
+                .captures(self.tree.root_node)
+            )
+            # TODO discard candidates that aren't of type 'marker.type'
             candidates: list[IdentifierBoundaries] = [ib for ib in capture2identifier_boundaries(
                 candidates,
                 self.lines
