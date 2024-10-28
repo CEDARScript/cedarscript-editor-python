@@ -198,9 +198,9 @@ class RangeSpec(NamedTuple):
                 if search_range:
                     # Make index relative to search range start
                     index = search_range.start + relative_index
-                    assert search_range.start <= index < search_range.end, (
+                    assert 0 <= index <= len(lines), (
                         f"Line number {stripped_search} out of bounds "
-                        f"(must be in interval [1, {search_range.end - search_range.start}] "
+                        f"(must be in interval [1, {len(lines) + 1}] "
                         f"relative to context)"
                     )
                 else:
