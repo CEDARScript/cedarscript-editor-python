@@ -1,0 +1,56 @@
+<no-train>
+
+# Refactor BaseConverter.convert
+
+Refactor the `convert` method in the `BaseConverter` class to be a stand alone, top level function.
+Name the new function `convert`, exactly the same name as the existing method.
+Update any existing `self.convert` calls to work with the new `convert` function.
+
+When you updated method `decode` to replace line 2, your content block used "@1:".
+Explain in details why the reference point is the method definition.
+Don't change any code, just give me explanations
+
+When updating call sites, use context-relative line numbers with the method being modified as context
+
+Explain in deep details how you chose line number 3 to update method "encode": where do you start counting line numbers?
+don't write any script, just answer my questions.
+
+Explain in deep details why, when replacing the lines, you provided content with relative indent prefix = 1.
+Just answer my question, don't change any code.
+
+The relative indentation level is relative to the line, not relative to the class BaseConverter. Help me improve the
+instructions I gave you earlier about CEDARScript to make it super clear and avoid this mistake in the future.
+
+
+```CEDARScript
+-- Move the `convert` method from the `BaseConverter` class, placing it at the top level, just before the line where its class starts
+UPDATE CLASS "BaseConverter"
+FROM FILE "1.py"
+MOVE METHOD "convert"
+INSERT BEFORE CLASS "BaseConverter"
+RELATIVE INDENTATION 0;
+
+-- Update the copied function to remove references to `self`
+UPDATE FUNCTION "convert"
+FROM FILE "1.py"
+REPLACE LINE 1
+WITH CONTENT '''
+@0:def convert(number, from_digits, to_digits, sign):
+''';
+
+-- Update ALL call sites of the method `convert` to call the new top-level function with the same name
+UPDATE METHOD "encode"
+FROM FILE "1.py"
+REPLACE LINE 3
+WITH CONTENT '''
+@0:neg, value = convert(i, self.decimal_digits, self.digits, "-")
+''';
+UPDATE METHOD "decode"
+FROM FILE "1.py"
+REPLACE LINE 3
+WITH CONTENT '''
+@0:neg, value = convert(s, self.digits, self.decimal_digits, self.sign)
+''';
+
+```
+</no-train>
