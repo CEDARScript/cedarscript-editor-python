@@ -55,28 +55,6 @@ BASE62_ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxy
 BASE64_ALPHABET = BASE62_ALPHABET + "-_"
 
 
-def convert(number, from_digits, to_digits, sign):
-    if str(number)[0] == sign:
-        number = str(number)[1:]
-        neg = 1
-    else:
-        neg = 0
-
-    # make an integer out of the number
-    x = 0
-    for digit in str(number):
-        x = x * len(from_digits) + from_digits.index(digit)
-
-    # create the result in base 'len(to_digits)'
-    if x == 0:
-        res = to_digits[0]
-    else:
-        res = ""
-        while x > 0:
-            digit = x % len(to_digits)
-            res = to_digits[digit] + res
-            x = int(x // len(to_digits))
-    return neg, res
 class BaseConverter:
     decimal_digits = "0123456789"
 
@@ -94,17 +72,39 @@ class BaseConverter:
         )
 
     def encode(self, i):
-        neg, value = convert(i, self.decimal_digits, self.digits, "-")
+        neg, value = self.convert(i, self.decimal_digits, self.digits, "-")
         if neg:
             return self.sign + value
         return value
 
     def decode(self, s):
-        neg, value = convert(s, self.digits, self.decimal_digits, self.sign)
+        neg, value = self.convert(s, self.digits, self.decimal_digits, self.sign)
         if neg:
             value = "-" + value
         return int(value)
 
+    def convert(self, number, from_digits, to_digits, sign):
+        if str(number)[0] == sign:
+            number = str(number)[1:]
+            neg = 1
+        else:
+            neg = 0
+
+        # make an integer out of the number
+        x = 0
+        for digit in str(number):
+            x = x * len(from_digits) + from_digits.index(digit)
+
+        # create the result in base 'len(to_digits)'
+        if x == 0:
+            res = to_digits[0]
+        else:
+            res = ""
+            while x > 0:
+                digit = x % len(to_digits)
+                res = to_digits[digit] + res
+                x = int(x // len(to_digits))
+        return neg, res
 
 
 base2 = BaseConverter(BASE2_ALPHABET)
