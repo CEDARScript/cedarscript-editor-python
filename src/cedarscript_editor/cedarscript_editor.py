@@ -4,7 +4,8 @@ from pathlib import Path
 
 from cedarscript_ast_parser import Command, RmFileCommand, MvFileCommand, UpdateCommand, \
     SelectCommand, CreateCommand, IdentifierFromFile, Segment, Marker, MoveClause, DeleteClause, \
-    InsertClause, ReplaceClause, EditingAction, BodyOrWhole, RegionClause, MarkerType
+    InsertClause, ReplaceClause, EditingAction, BodyOrWhole, RegionClause, MarkerType, EdScript
+from ed_script_filter import process_ed_script
 from cedarscript_ast_parser.cedarscript_ast_parser import MarkerCompatible, RelativeMarker, \
     RelativePositionType, Region, SingleFileClause
 from text_manipulation import (
@@ -148,6 +149,13 @@ class CEDARScriptEditor:
 
 
         match content:
+            case EdScript() as ed_script:
+                if not isinstance(action, ReplaceClause):
+                    raise ValueError("ED scripts can only be used with REPLACE actions")
+                # Process ED script on just the lines in the search range
+                range_lines = search_range.read(lines)
+                processed_lines = process_ed_script(range_lines, ed_script.script)
+                content = processed_lines
             case str() | [str(), *_] | (str(), *_):
                 pass
             case (region, relindent_level):
@@ -161,10 +169,6 @@ class CEDARScriptEditor:
             case _:
                 match action:
                     case MoveClause(insert_position=region, relative_indentation=relindent_level):
-                        # dest_range = restrict_search_range_for_marker(
-                        #     region, action, lines, RangeSpec.EMPTY, identifier_finder
-                        # )
-                        # TODO Are the 3 lines above needed?
                         content = IndentationInfo.shift_indentation(
                             move_src_range.read(lines), lines, search_range.indent, relindent_level
                         )
