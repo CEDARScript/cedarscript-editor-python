@@ -1,0 +1,13 @@
+<no-train>
+```CEDARScript
+UPDATE CLASS "BaseConverter"
+FROM FILE "1.py"
+REPLACE BODY WITH ED r'''
+H
+/def convert/s/self, //
+/self.convert/s/self\.//g
+w
+q
+''';
+```
+</no-train>

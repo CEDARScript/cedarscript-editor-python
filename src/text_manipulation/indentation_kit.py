@@ -145,18 +145,20 @@ class IndentationInfo(NamedTuple):
             >>> lines = ["    def example():", "        print('Hello')"]
             >>> info.shift_indentation(content, 8)
             ['        def example():', '            print('Hello')']
+            :param target_lines:
         """
         context_indent_char_count = cls.from_content(target_lines).char_count
         return (cls.
             from_content(content).
             _replace(char_count=context_indent_char_count).
             _shift_indentation(
-                content, target_lines, target_reference_indentation_count, relindent_level
+                content, target_reference_indentation_count, relindent_level
             )
         )
 
-    def _shift_indentation(self,
-        content: Sequence[str], target_lines: Sequence[str], target_base_indentation_count: int, relindent_level: int | None
+    def _shift_indentation(
+        self,
+        content: Sequence[str], target_base_indentation_count: int, relindent_level: int | None
     ) -> list[str]:
         target_base_indentation_count += self.char_count * (relindent_level or 0)
         raw_line_adjuster = self._shift_indentation_fun(target_base_indentation_count)

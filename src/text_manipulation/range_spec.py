@@ -80,7 +80,10 @@ class RangeSpec(NamedTuple):
             case int():
                 return self.start <= item < self.end
             case RangeSpec():
-                return self == RangeSpec.EMPTY or item != RangeSpec.EMPTY and self.start <= item.start and item.end <= self.end
+                return (
+                    self == RangeSpec.EMPTY or
+                    item != RangeSpec.EMPTY and self.start <= item.start and item.end <= self.end
+                )
 
     @property
     def line_count(self):
@@ -417,9 +420,9 @@ class IdentifierBoundaries(NamedTuple):
                 return RangeSpec(self.whole.start, self.whole.start, self.whole.indent)
             case RelativePositionType.AFTER:
                 return RangeSpec(self.whole.end, self.whole.end, self.whole.indent)
-            case RelativePositionType.INSIDE_TOP:
+            case RelativePositionType.INTO_TOP:
                 return RangeSpec(self.body.start, self.body.start, self.body.indent)
-            case RelativePositionType.INSIDE_BOTTOM:
+            case RelativePositionType.INTO_BOTTOM:
                 return RangeSpec(self.body.end, self.body.end, self.body.indent)
             case _ as invalid:
                 raise ValueError(f"Invalid: {invalid}")

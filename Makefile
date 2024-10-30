@@ -15,4 +15,4 @@ dist: test
 	python -m build && twine upload dist/*
 
 clean:
-	rm -f /dist/
+	rm -rfv out dist build/bdist.*

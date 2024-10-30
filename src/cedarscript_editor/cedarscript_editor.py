@@ -4,8 +4,10 @@ from pathlib import Path
 
 from cedarscript_ast_parser import Command, RmFileCommand, MvFileCommand, UpdateCommand, \
     SelectCommand, CreateCommand, IdentifierFromFile, Segment, Marker, MoveClause, DeleteClause, \
-    InsertClause, ReplaceClause, EditingAction, BodyOrWhole, RegionClause, MarkerType, EdScript
-from ed_script_filter import process_ed_script
+    InsertClause, ReplaceClause, EditingAction, BodyOrWhole, RegionClause, MarkerType, EdScript, \
+    CaseStatement
+from .ed_script_filter import process_ed_script
+from .case_filter import process_case_statement
 from cedarscript_ast_parser.cedarscript_ast_parser import MarkerCompatible, RelativeMarker, \
     RelativePositionType, Region, SingleFileClause
 from text_manipulation import (
@@ -59,7 +61,7 @@ class CEDARScriptEditorException(Exception):
             "think step-by-step and write an in-depth analysis of what went wrong (specifying which command ordinal "
             "failed), then acknowledge which commands were already applied and concisely describe the state at which "
             "the file was left (saying what needs to be done now). Write all that inside these 2 tags "
-            "(<reasoning>...Chain of thoughts and reasoning here...</reasoning>\\n<verdict>...distilled analysis "\
+            "(<reasoning>...Chain of thoughts and reasoning here...</reasoning>\\n<verdict>...distilled analysis "
             "here...</verdict>); "
             "Then write new commands that will fix the problem"
             f"{previous_cmd_notes} (you'll get a one-million dollar tip if you get it right!) "
@@ -122,14 +124,6 @@ class CEDARScriptEditor:
             case RegionClause(region=region) | InsertClause(insert_position=region):
                 search_range = restrict_search_range(region, target, identifier_finder, lines)
 
-        # UPDATE FUNCTION "_check_raw_id_fields_item"
-        # FROM FILE "refactor-benchmark/checks_BaseModelAdminChecks__check_raw_id_fields_item/checks.py"
-        # REPLACE LINE "def _check_raw_id_fields_item(self, obj, field_name, label):"
-        # WITH CONTENT '''
-        # @0:def _check_raw_id_fields_item(obj, field_name, label):
-        # ''';
-        # target = IdentifierFromFile(file_path='refactor-benchmark/checks_BaseModelAdminChecks__check_raw_id_fields_item/checks.py', identifier_type=<MarkerType.FUNCTION: 'function'>, name='_check_raw_id_fields_item', where_clause=None, offset=None)
-        # action = ReplaceClause(region=Marker(type=<MarkerType.LINE: line>, value=def _check_raw_id_fields_item(self, obj, field_name, label):, offset=None))
         if search_range.line_count:
             match action:
                 case RegionClause(region=Segment()):
@@ -149,13 +143,14 @@ class CEDARScriptEditor:
 
 
         match content:
-            case EdScript() as ed_script:
-                if not isinstance(action, ReplaceClause):
-                    raise ValueError("ED scripts can only be used with REPLACE actions")
-                # Process ED script on just the lines in the search range
+            case EdScript() as ed_script_filter:
+                # Filter the search range lines using an ED script
                 range_lines = search_range.read(lines)
-                processed_lines = process_ed_script(range_lines, ed_script.script)
-                content = processed_lines
+                content = process_ed_script(range_lines, ed_script_filter.script)
+            case CaseStatement() as case_filter:
+                # Filter the search range lines using `WHEN..THEN` pairs of a CASE statement
+                range_lines = search_range.read(lines)
+                content = process_case_statement(range_lines, case_filter)
             case str() | [str(), *_] | (str(), *_):
                 pass
             case (region, relindent_level):
@@ -343,7 +338,6 @@ def restrict_search_range(
             return segment.to_search_range(lines, identifier_boundaries.whole if identifier_boundaries is not None else None)
         case _ as invalid:
             raise ValueError(f'Unsupported region type: {type(invalid)}')
-    return RangeSpec.EMPTY
 
 
 def restrict_search_range_for_marker(

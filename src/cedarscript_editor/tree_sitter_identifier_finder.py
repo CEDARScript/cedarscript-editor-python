@@ -19,6 +19,7 @@ like functions and classes along with their hierarchical relationships.
 
 _log = logging.getLogger(__name__)
 
+
 class IdentifierFinder:
     """Finds identifiers in source code based on markers and parent restrictions.
 
@@ -50,7 +51,9 @@ class IdentifierFinder:
         _log.info(f"[IdentifierFinder] Selected {self.language}")
         self.tree = get_parser(langstr).parse(bytes(source, "utf-8"))
 
-    def __call__(self, mos: Marker | Segment, parent_restriction: ParentRestriction = None) -> IdentifierBoundaries | RangeSpec | None:
+    def __call__(
+            self, mos: Marker | Segment, parent_restriction: ParentRestriction = None
+    ) -> IdentifierBoundaries | RangeSpec | None:
         parent_restriction = parent_restriction or self.parent_restriction
         match mos:
             case Marker(MarkerType.LINE) | Segment():
