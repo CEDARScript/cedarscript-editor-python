@@ -57,8 +57,9 @@ class CEDARScriptEditorException(Exception):
             "\n<suggestion>Reflect about common mistakes when using CEDARScript. Now relax, take a deep breath, "
             "think step-by-step and write an in-depth analysis of what went wrong (specifying which command ordinal "
             "failed), then acknowledge which commands were already applied and concisely describe the state at which "
-            "the file was left (saying what needs to be done now). Write all that in the format "
-            "<reasoning>...Chain of thoughts and reasoning here...<reasoning>\\n<verdict>...distilled analysis here...</verdict>; "
+            "the file was left (saying what needs to be done now). Write all that inside these 2 tags "
+            "(<reasoning>...Chain of thoughts and reasoning here...</reasoning>\\n<verdict>...distilled analysis "\
+            "here...</verdict>); "
             "Then write new commands that will fix the problem"
             f"{previous_cmd_notes} (you'll get a one-million dollar tip if you get it right!) "
             "Use descriptive comment before each command; If showing CEDARScript commands to the user, "
