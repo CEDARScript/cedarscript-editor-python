@@ -1,10 +1,20 @@
 <no-train>
 ```CEDARScript
+UPDATE FILE "1.txt"
+REPLACE WHOLE WITH CASE
+  WHEN PREFIX 'def convert(' THEN SUB
+    r'self, '
+    r''
+  WHEN REGEX r'self\.convert' THEN SUB
+    r'self\.(convert)'
+    r'\1'
+END;
+
 UPDATE FILE "1.py"
 REPLACE WHOLE WITH CASE
   WHEN PREFIX 'def convert(' THEN SUB
-    r'(def convert\()self, '
-    r'\1'
+    r'self, '
+    r''
   WHEN REGEX r'self\.convert' THEN SUB
     r'self\.(convert)'
     r'\1'

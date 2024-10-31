@@ -200,12 +200,13 @@ class CEDARScriptEditor:
 
             case ReplaceClause() | InsertClause():
                 match content:
-                    case (region, processed_content):
-                        content = processed_content
                     case str():
                         content = IndentationInfo.from_content(lines).apply_relative_indents(
                             content, range_spec.indent
                         )
+                    case Sequence():
+                        content = [line.rstrip() for line in content]
+
 
                 range_spec.write(content, lines)
 

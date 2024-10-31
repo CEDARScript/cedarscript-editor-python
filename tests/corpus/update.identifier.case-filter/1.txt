@@ -4,6 +4,7 @@ class BaseConverter:
             neg, value = (self.convert(i, self.decimal_digits, self.digits, "-"))
     def decode(self, s):
         neg, value = self.convert(s, self.digits, self.decimal_digits, self.sign)
-def xx(self, number, from_digits, to_digits, sign):
-    def convert(self, number, from_digits, to_digits, sign):
+def convert(self, number, from_digits, to_digits, sign):
+    b = def convert(self, number, from_digits, to_digits, sign):
+        def a():
 def convert(self, number, from_digits, to_digits, sign):

@@ -17,21 +17,23 @@ def process_ed_script(content: Sequence[str], ed_script: str) -> list[str]:
     Raises:
         RuntimeError: If ed command fails
     """
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.txt') as content_file, \
-            tempfile.NamedTemporaryFile(mode='w', suffix='.ed') as script_file:
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.txt') as content_file:
 
         # Write content and script to temp files
         content_file.write('\n'.join(content))
         content_file.flush()
 
-        script_file.write(ed_script)
-        script_file.flush()
-
         # Run ed
+        ed_script = ed_script.strip()
+        # 'H' to Enable verbose errors
+        match ed_script:
+            case '':
+                ed_script = 'H\nw\nq'
+            case _:
+                ed_script = f'H\n{ed_script}\nw\nq'
         process = subprocess.run(
             ['ed', content_file.name],
-            input=f'H\n',  # Enable verbose errors
-            stdin=open(script_file.name),
+            input=ed_script,
             capture_output=True,
             text=True
         )

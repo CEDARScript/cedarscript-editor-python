@@ -1,0 +1,33 @@
+<no-train>
+```CEDARScript
+UPDATE FILE "1.txt"
+REPLACE WHOLE WITH ED r'''
+
+g/self\.convert/s/self\.\(convert\)/\1/g
+g/^def convert/s/self, //
+
+''';
+
+-- 1. Update the function signature of `calc1()` to add parameter `tax: float` as the first one and use the new parameter instead of `7`
+UPDATE FUNCTION "calc1"
+FROM FILE "1.py"
+REPLACE WHOLE WITH ED r'''
+
+g/def calc1/s/(/(tax: float, /
+g/return/s/7.*/tax/
+
+''';
+
+-- 2. Update the function signature of `calc2()` to add parameter `base_tax: float = 1.3` as the last one
+-- 3. Update ALL call sites of `calc1()` to pass `base_tax` as the first argument
+UPDATE FUNCTION "calc2"
+FROM FILE "1.py"
+REPLACE WHOLE WITH ED r'''
+
+g/def calc2/s/)/, base_tax: float = 1.3)/
+g/calc1(/s/\(calc1(\)/\1base_tax, /
+
+''';
+
+    ```
+</no-train>
