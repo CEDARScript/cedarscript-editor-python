@@ -22,7 +22,7 @@ classifiers = [
 ]
 keywords = ["cedarscript", "code-editing", "refactoring", "code-analysis", "sql-like", "ai-assisted-development"]
 dependencies = [
-    "cedarscript-ast-parser==0.3.0",
+    "cedarscript-ast-parser==0.4.3",
     "grep-ast==0.3.3",
     "tree-sitter-languages==1.10.2",
 ]
