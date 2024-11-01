@@ -174,10 +174,8 @@ class RangeSpec(NamedTuple):
         assert search_line, "Empty marker"
         assert search_term.type == MarkerType.LINE, f"Invalid marker type: {search_term.type}"
 
-        matches = {t: [] for t in MATCH_TYPES}
 
-        stripped_search = search_line.strip()
-        normalized_search_line = cls.normalize_line(stripped_search)
+        matches = {t: [] for t in MATCH_TYPES}
 
         if search_start_index < 0:
             search_start_index = 0
@@ -193,81 +191,82 @@ class RangeSpec(NamedTuple):
             f"must be less than or equal to line count ({len(lines)})"
         )
 
-        marker_subtype = (search_term.marker_subtype or "").casefold()
+        marker_subtype = (search_term.marker_subtype or "string").casefold()
 
+        # Handle special marker subtypes that don't use normal line matching
         match marker_subtype:
-            case 'number':  # Line number relative to search range
-                relative_index = int(stripped_search) - 1
+            case 'number':  # Match by line number relative to search range
+                relative_index = search_line - 1
                 if search_range:
                     # Make index relative to search range start
                     index = search_range.start + relative_index
-                    assert 0 <= index <= len(lines), (
-                        f"Line number {stripped_search} out of bounds "
-                        f"(must be in interval [1, {len(lines) + 1}] "
-                        f"relative to context)"
-                    )
+                    if not (0 <= index <= len(lines)):
+                        raise ValueError(
+                            f"Line number {search_line} out of bounds "
+                            f"(must be in interval [1, {len(lines) + 1}] relative to context)"
+                        )
                 else:
-                    # No context - use absolute file line number
                     index = relative_index
-                    assert 0 <= index < len(lines), (
-                        f"Line number {stripped_search} out of bounds "
-                        f"(must be in interval [1, {len(lines)}])"
-                    )
+                    if not (0 <= index < len(lines)):
+                        raise ValueError(
+                            f"Line number {search_line} out of bounds "
+                            f"(must be in interval [1, {len(lines)}])"
+                        )
                 reference_indent = get_line_indent_count_from_lines(lines, index)
                 index += calc_index_delta_for_relative_position(search_term)
                 return cls(index, index, reference_indent)
 
-            case 'regex':
+            case 'regex':  # Match using regex pattern
                 try:
                     pattern = re.compile(search_line)
                 except re.error as e:
                     raise ValueError(f"Invalid regex pattern '{search_line}': {e}")
 
-            case _:
+            case _:  # Default string matching modes
                 pattern = None
+                stripped_search = search_line.strip() if search_line else ""
+                normalized_search_line = cls.normalize_line(stripped_search)
 
-        # Not a line number, so we need to find all line matches
+        # Find all matching lines based on marker subtype
         for i in range(search_start_index, search_end_index):
             reference_indent = get_line_indent_count_from_lines(lines, i)
-
             line = lines[i]
+            stripped_line = line.strip()
+            normalized_line = cls.normalize_line(line)
+
             match marker_subtype:
+                case 'empty':
+                    if not line or not stripped_line:
+                        matches['stripped'].append((i, reference_indent))
+
+                case 'indent-level':
+                    if reference_indent == search_line: # TODO Calc indent level
+                        matches['exact'].append((i, reference_indent))
 
                 case 'regex':
-                    if pattern.search(line) or pattern.search(line.strip()):
+                    if pattern.search(line) or pattern.search(stripped_line):
                         matches['exact'].append((i, reference_indent))
 
                 case 'prefix':
-                    # Check for stripped prefix match
-                    if line.strip().startswith(stripped_search):
+                    if stripped_line.startswith(stripped_search):
                         matches['exact'].append((i, reference_indent))
-                    # Check for normalized prefix match
-                    elif cls.normalize_line(line).startswith(normalized_search_line):
+                    elif normalized_line.startswith(normalized_search_line):
                         matches['normalized'].append((i, reference_indent))
 
                 case 'suffix':
-                    # Check for stripped suffix match
-                    if line.strip().endswith(stripped_search):
+                    if stripped_line.endswith(stripped_search):
                         matches['exact'].append((i, reference_indent))
-                    # Check for normalized suffix match
-                    elif cls.normalize_line(line).endswith(normalized_search_line):
+                    elif normalized_line.endswith(normalized_search_line):
                         matches['normalized'].append((i, reference_indent))
 
-                case _:
-                    # Check for exact match
+                case 'string' | _:  # Default string matching
                     if search_line == line:
                         matches['exact'].append((i, reference_indent))
-
-                    # Check for stripped match
-                    elif stripped_search == line.strip():
+                    elif stripped_search == stripped_line:
                         matches['stripped'].append((i, reference_indent))
-
-                    # Check for normalized match
-                    elif normalized_search_line == cls.normalize_line(line):
+                    elif normalized_search_line == normalized_line:
                         matches['normalized'].append((i, reference_indent))
-
-                    # Dangerous! Last resort!
-                    elif normalized_search_line.casefold() in cls.normalize_line(line).casefold():
+                    elif normalized_search_line.casefold() in normalized_line.casefold():
                         matches['partial'].append((i, reference_indent))
 
         offset = search_term.offset or 0
