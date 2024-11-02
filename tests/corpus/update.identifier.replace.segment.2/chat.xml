@@ -1,0 +1,13 @@
+<no-train>
+```CEDARScript
+UPDATE METHOD "calculate" OFFSET 1
+FROM FILE "1.py"
+REPLACE SEGMENT
+    STARTING AFTER LINE 0
+    ENDING BEFORE LINE 2
+WITH CONTENT '''
+@-1:def calculate(self, line_1,
+@0:line_2,
+''';
+```
+</no-train>
