@@ -191,7 +191,7 @@ class RangeSpec(NamedTuple):
         )
 
         marker_subtype = (search_term.marker_subtype or "string").casefold()
-        assert search_line or marker_subtype == 'empty', "Empty marker"
+        assert search_line is not None or marker_subtype == 'empty', "Empty marker"
 
         # Handle special marker subtypes that don't use normal line matching
         match marker_subtype:
