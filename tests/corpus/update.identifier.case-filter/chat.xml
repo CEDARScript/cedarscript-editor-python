@@ -19,5 +19,23 @@ REPLACE WHOLE WITH CASE
     r'self\.(convert)'
     r'\1'
 END;
+
+-- Update the copied function to remove references to `self`
+UPDATE FUNCTION "_make_source_table"
+  FROM FILE "analyzer_cli.py"
+REPLACE WHOLE WITH CASE
+  WHEN PREFIX '''def _make_source_table(self''' THEN SUB
+    r'''(def _make_source_table\()self, '''
+    r'''\1'''
+  END;
+
+-- Update ALL call sites of the method `_make_source_table` to call the new top-level function with the same name
+UPDATE METHOD "DebugAnalyzer.list_source"
+  FROM FILE "analyzer_cli.py"
+REPLACE BODY WITH CASE
+  WHEN REGEX r'''self\._make_source_table''' THEN SUB
+    r'''self\.(_make_source_table)'''
+    r'''\1'''
+END;
 ```
 </no-train>

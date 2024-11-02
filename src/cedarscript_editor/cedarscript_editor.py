@@ -97,8 +97,6 @@ class CEDARScriptEditor:
                         raise ValueError(f"Unknown command '{type(invalid)}'")
             except Exception as e:
                 print(f'[apply_commands] (command #{i+1}) Failed: {command}')
-                if isinstance(command, UpdateCommand):
-                    print(f'CMD CONTENT: ***{command.content}***')
                 raise CEDARScriptEditorException(i + 1, str(e)) from e
         return result
 
@@ -176,7 +174,7 @@ class CEDARScriptEditor:
 
         write_file(file_path, lines)
 
-        return f"Updated {target if target else 'file'} in {file_path}\n  -> {action}"
+        return f"Updated {target if target else 'file'}\n  -> {action}"
 
     @staticmethod
     def _apply_action(
