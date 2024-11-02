@@ -1,6 +1,6 @@
 <no-train>
 ```CEDARScript
-UPDATE METHOD "calculate" OFFSET 1
+UPDATE METHOD "calculate"
 FROM FILE "1.py"
 REPLACE SEGMENT
     STARTING AFTER LINE 0
