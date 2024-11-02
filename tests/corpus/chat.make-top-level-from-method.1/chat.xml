@@ -29,7 +29,7 @@ WITH CONTENT '''
 -- 3. Update ALL call sites of the method `_candidate()` to call the new top-level function with the same name
 UPDATE FUNCTION "_check"
 FROM FILE "main.py"
-REPLACE LINE 'self._candidate(' -- There's only 1 call site and this line marker is unambiguous, so it's more concise to just replace a LINE instead of a SEGMENT
+REPLACE LINE "self._candidate("
 WITH CONTENT '''
 @0:_candidate(
 ''';
