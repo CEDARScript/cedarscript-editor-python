@@ -207,7 +207,6 @@ class CEDARScriptEditor:
                     case Sequence():
                         content = [line.rstrip() for line in content]
 
-
                 range_spec.write(content, lines)
 
             case _ as invalid:
