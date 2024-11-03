@@ -76,9 +76,9 @@ def _matches_when(line: str, when: CaseWhen, indent_level: int, line_num: int) -
         return True
     if when.regex and when.regex.search(stripped):
         return True
-    if when.prefix and stripped.startswith(when.prefix):
+    if when.prefix and stripped.startswith(when.prefix.strip()):
         return True
-    if when.suffix and stripped.endswith(when.suffix):
+    if when.suffix and stripped.endswith(when.suffix.strip()):
         return True
     if when.indent_level is not None and indent_level == when.indent_level:
         return True
