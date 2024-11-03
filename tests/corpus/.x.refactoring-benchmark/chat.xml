@@ -1,0 +1,218 @@
+<no-train>
+```CEDARScript
+
+/*
+Moved method now at 2-char indent:
+-- [0 -> -4] (                  --) (++++++++++++++++++++) autosave_AutosaveForPlugin_get_files_to_recover
+-- [0 -> -4] (--------------------) (++++++++++++++++++++) base_BaseHandler_adapt_method_mode
+-- [0 -> -4] (                   -) (++++++++++++++++++++) gradient_checker_GradientChecker__assertInferTensorChecks
+-- [0 -> -4] (             -------) (++++++++++++++++++++) i18n_JavaScriptCatalog_get_paths
+@ Stable: FAILED (15) @@
+=- [-4 -> -4] ( -------------------) (++++++++++++++++++++) common_methods_invocations_foreach_inputs_sample_func__sample_rightmost_arg
+
+*/
+
+/* config.py
+Doubled fun signature:
+-- [0 -> -4] (        ------------) (++++++++++++++++++++) config_NetworkConfig_parse
+*/
+
+-- 1. Move the `parse` method from the `NetworkConfig` class to the top level of the file.
+UPDATE CLASS "NetworkConfig"
+FROM FILE "config.py"
+MOVE METHOD "parse"
+INSERT BEFORE CLASS "NetworkConfig"
+RELATIVE INDENTATION 0;
+
+-- 2. Update the function signature of the new `parse` function to remove the `self` parameter.
+UPDATE FUNCTION "parse"
+FROM FILE "config.py"
+REPLACE WHOLE WITH CASE
+WHEN REGEX r'''def parse''' THEN SUB
+r'''(def parse\()self,\s*'''
+r'''\1lines, comment_tokens=None):
+'''
+END;
+
+-- 3. Update all call sites of `self.parse` to call the new `parse` function.
+UPDATE METHOD "NetworkConfig.load"
+FROM FILE "config.py"
+REPLACE BODY WITH CASE
+WHEN REGEX r'''self\.parse''' THEN SUB
+r'''self\.parse'''
+r'''parse'''
+END;
+
+
+/* generic_bsd.py
+
+# Refactor GenericBsdIfconfigNetwork.parse_inet_line
+Refactor the `parse_inet_line` method in the `GenericBsdIfconfigNetwork` class to be a stand alone, top level function.
+Name the new function `parse_inet_line`, exactly the same name as the existing method.
+Update any existing `self.parse_inet_line` calls to work with the new `parse_inet_line` function.
+
+    > SyntaxError: duplicate argument 'current_if' in function definition:
+    -- [0 -> -4] (                   -) (++++++++++++++++++++) generic_bsd_GenericBsdIfconfigNetwork_parse_inet_line
+*/
+
+-- 1. Move the `parse_inet_line` method from the `GenericBsdIfconfigNetwork` class to the top level of the file.
+-- As method `parse_inet_line` only exists in one place, it's unambiguous, but this time we wmust try the alternative form `UPDATE CLASS..MOVE FUNCTION` (instead of `UPDATE FUNCTION..MOVE WHOLE`) because the latter failed last time we tried.
+UPDATE CLASS "GenericBsdIfconfigNetwork"
+FROM FILE "generic_bsd.py"
+MOVE METHOD "parse_inet_line"
+INSERT BEFORE CLASS "GenericBsdIfconfigNetwork"
+RELATIVE INDENTATION 0;
+
+-- 2. Update the copied function to remove references to `self`
+UPDATE FUNCTION "parse_inet_line"
+FROM FILE "generic_bsd.py"
+REPLACE WHOLE WITH CASE
+WHEN REGEX r'''def parse_inet_line''' THEN SUB
+r'''(def parse_inet_line\()self,\s*'''
+r'''\1words, current_if, ips'''
+END;
+
+-- 3. Update ALL call sites of the method `parse_inet_line` to call the new top-level function with the same name
+UPDATE CLASS "GenericBsdIfconfigNetwork"
+FROM FILE "generic_bsd.py"
+REPLACE WHOLE WITH CASE
+WHEN REGEX r'''self\.parse_inet_line''' THEN SUB
+r'''self\.parse_inet_line'''
+r'''parse_inet_line'''
+END;
+
+
+/* graph_drawer
+The class identifier named `FxGraphDrawer`: 4 matches
+-- [0 -> -4] (--------------------) (++++++++++++++++++++) graph_drawer_FxGraphDrawer__stringify_tensor_meta
+*/
+-- Ambiguous ?!?!?!
+UPDATE CLASS "FxGraphDrawer" OFFSET 3
+FROM FILE "graph_drawer.py"
+MOVE METHOD "_stringify_tensor_meta"
+INSERT BEFORE CLASS "FxGraphDrawer" OFFSET 3
+RELATIVE INDENTATION 0;
+
+-- 1. Move the `_stringify_tensor_meta` method from the `FxGraphDrawer` class to the top level of the file.
+UPDATE CLASS "FxGraphDrawer"
+FROM FILE "graph_drawer.py"
+MOVE METHOD "_stringify_tensor_meta"
+INSERT BEFORE CLASS "FxGraphDrawer"
+RELATIVE INDENTATION 0;
+
+-- 2. Update the copied function to remove references to `self`
+UPDATE FUNCTION "_stringify_tensor_meta"
+FROM FILE "graph_drawer.py"
+REPLACE WHOLE WITH CASE
+WHEN REGEX r'''def _stringify_tensor_meta''' THEN SUB
+r'''(def _stringify_tensor_meta\()self,\s*'''
+r'''\1tm: TensorMetadata'''
+END;
+
+-- 3. Update all call sites of the method `_stringify_tensor_meta` to call the new top-level function with the same name.
+UPDATE CLASS "FxGraphDrawer"
+FROM FILE "graph_drawer.py"
+REPLACE WHOLE WITH CASE
+WHEN REGEX r'''self\._stringify_tensor_meta''' THEN SUB
+r'''self\.(_stringify_tensor_meta)'''
+r'''\1'''
+END;
+
+/* migrate.py
+'NoneType' object has no attribute 'line_count':
+-- [0 -> -4] (                  --) (++++++++++++++++++++) migrate_Command_add_arguments
+*/
+-- 1. Move the `add_arguments` method from the `Command` class to the top level of the file.
+UPDATE CLASS "Command"
+FROM FILE "migrate.py"
+MOVE METHOD "add_arguments"
+INSERT BEFORE CLASS "Command"
+RELATIVE INDENTATION 0;
+
+-- 2. Update the copied function to remove references to `self`.
+UPDATE FUNCTION "add_arguments"
+FROM FILE "migrate.py"
+REPLACE WHOLE WITH CASE
+WHEN REGEX r'''def add_arguments''' THEN SUB
+r'''(def add_arguments\()self,\s*'''
+r'''\1parser: ArgumentParser, '''
+END;
+
+-- 3. Update all call sites of the method `add_arguments` to call the new top-level function with the same name.
+UPDATE METHOD "Command.handle"
+FROM FILE "migrate.py"
+REPLACE BODY WITH CASE
+WHEN REGEX r'''self\.add_arguments''' THEN SUB
+r'''self\.(add_arguments)'''
+r'''\1'''
+END;
+
+/* operations.py
+    > <error-location>COMMAND #3</error-location>
+    > <description>'class DatabaseOperations [operations.py]' not found</description>
+*/
+-- 1. Move the `bulk_insert_sql` method from the `DatabaseOperations` class to the top level of the file.
+UPDATE CLASS "DatabaseOperations"
+FROM FILE "operations.py"
+MOVE METHOD "bulk_insert_sql"
+INSERT BEFORE CLASS "DatabaseOperations"
+RELATIVE INDENTATION 0;
+
+-- 2. Update the copied function to remove references to `self`.
+UPDATE FUNCTION "bulk_insert_sql"
+FROM FILE "operations.py"
+REPLACE WHOLE WITH CASE
+WHEN REGEX r'''def bulk_insert_sql''' THEN SUB
+r'''(def bulk_insert_sql\()self,\s*'''
+r'''\1fields, placeholder_rows):
+'''
+END;
+
+-- 3. Update all call sites of the method `bulk_insert_sql` to call the new top-level function with the same name.
+UPDATE CLASS "DatabaseOperations"
+FROM FILE "operations.py"
+REPLACE BODY WITH CASE
+WHEN REGEX r'''self\.bulk_insert_sql''' THEN SUB
+r'''self\.(bulk_insert_sql)'''
+r'''\1'''
+END;
+
+/* special.py
+-- [0 -> -4] (--------------------) (++++++++++++++++++++) special_RunSQL__run_sql
+> special.py:64:21: E999 SyntaxError: unmatched ')'
+def _run_sql(schema_editor, sqls):
+    def _run_sql(schema_editor, sqls):
+
+Original:
+    def _run_sql(self, schema_editor, sqls):
+*/
+
+-- 1. Move the `_run_sql` method from the `RunSQL` class to the top level of the file.
+UPDATE CLASS "RunSQL"
+FROM FILE "special.py"
+MOVE METHOD "_run_sql"
+INSERT BEFORE CLASS "RunSQL"
+RELATIVE INDENTATION 0;
+
+-- 2. Update the copied function to remove references to `self`.
+UPDATE FUNCTION "_run_sql"
+FROM FILE "special.py"
+REPLACE WHOLE WITH CASE
+WHEN REGEX r'''def _run_sql''' THEN SUB
+r'''(def _run_sql\()self,\s*'''
+r'''\1schema_editor, sqls):
+'''
+END;
+
+-- 3. Update all call sites of the method `_run_sql` to call the new top-level function with the same name.
+UPDATE CLASS "RunSQL"
+FROM FILE "special.py"
+REPLACE BODY WITH CASE
+WHEN REGEX r'''self\._run_sql''' THEN SUB
+r'''self\.(_run_sql)'''
+r'''\1'''
+END;
+
+
+    ```
+</no-train>

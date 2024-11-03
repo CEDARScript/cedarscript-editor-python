@@ -1,0 +1,17 @@
+<no-train>
+```CEDARScript
+-- 1. Move the method to become a top-level function.
+UPDATE CLASS "AutosaveForPlugin"
+FROM FILE "autosave.py"
+MOVE METHOD "get_files_to_recover"
+INSERT BEFORE CLASS "AutosaveForPlugin"
+RELATIVE INDENTATION 0;
+
+-- 1. Move the `adapt_method_mode` method from the `BaseHandler` class, placing it at the top level, just before the line where its class starts
+UPDATE CLASS "BaseHandler"
+FROM FILE "base.py"
+MOVE METHOD "adapt_method_mode"
+INSERT BEFORE CLASS "BaseHandler"
+RELATIVE INDENTATION 0;
+```
+</no-train>
