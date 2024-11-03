@@ -235,7 +235,7 @@ class IndentationInfo(NamedTuple):
         deltas = sorted([b - a for a, b in zip(unique_space_counts, unique_space_counts[1:])], reverse=True)
         most_common_deltas = Counter(deltas).most_common(5)
         ratio_most_common = most_common_deltas[0][1] / len(deltas)
-        if ratio_most_common > .6:
+        if ratio_most_common > .5:
             return most_common_deltas[0][0]
 
         # Resort to GCD
