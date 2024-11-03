@@ -181,12 +181,17 @@ def segment_to_search_range(
     )
 
     start_index_for_end_marker = start_match_result.as_index
-    match start_relpos:
-        case RelativeMarker(qualifier=RelativePositionType.AFTER):
-            start_index_for_end_marker += -1
-    end_match_result = RangeSpec.from_line_marker(lines, end_relpos, RangeSpec(
-        start_index_for_end_marker, search_range.end, start_match_result.indent
-    ))
+    search_range_for_end_marker = search_range
+    if end_relpos.marker_subtype != 'number':
+        match start_relpos:
+            case RelativeMarker(qualifier=RelativePositionType.AFTER):
+                start_index_for_end_marker += -1
+                search_range_for_end_marker = RangeSpec(
+                    start_index_for_end_marker,
+                    search_range.end,
+                    start_match_result.indent
+                )
+    end_match_result = RangeSpec.from_line_marker(lines, end_relpos, search_range_for_end_marker)
     assert end_match_result, (
         f"Unable to find segment end: {end_relpos}; Try: "
         f"1) Using *exactly* the same characters from source; or "
