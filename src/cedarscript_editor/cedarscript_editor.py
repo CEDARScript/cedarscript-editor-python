@@ -122,7 +122,7 @@ class CEDARScriptEditor:
             case RegionClause(region=region) | InsertClause(insert_position=region):
                 search_range = restrict_search_range(region, target, identifier_finder, lines)
 
-        if search_range.line_count:
+        if search_range and search_range.line_count:
             match action:
                 case RegionClause(region=Segment()):
                     pass

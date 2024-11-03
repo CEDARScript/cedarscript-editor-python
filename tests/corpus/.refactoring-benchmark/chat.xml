@@ -1,16 +1,83 @@
+<report>
+
+# CEDARScript 1.1.2 + 1.1.6
+# gemini-1.5-flash-latest
+# pass_rate_1: 74.2
+# pass_rate_2: 75.3
+# pass_rate_3: 75.3
+# percent_cases_well_formed: 89.9
+# total_cost: 1.2366
+
+
+@@ Worsened, now FAILED (5) @@
+The class identifier named `FxGraphDrawer`: 4 matches
+-- [0 -> -4] (--------------------) (++++++++++++++++++++) graph_drawer_FxGraphDrawer__stringify_tensor_meta
+
+Moved method now at 2-char indent:
+-- [0 -> -4] (                   -) (++++++++++++++++++++) gradient_checker_GradientChecker__assertInferTensorChecks
+-- [0 -> -4] (             -------) (++++++++++++++++++++) i18n_JavaScriptCatalog_get_paths
+POSTPONED =- [-4 -> -4] (  ------------------) (++++++++++++++++++++) codeeditor_CodeEditor___get_brackets
+
+> makemessages.py:208:20: E999 SyntaxError: unexpected character after line continuation character
+-- [0 -> -3] (     ---------------) (++++++++++++++++++++) makemessages_Command_add_arguments
+
+-- [0 -> -3] (            --------) (++++++++++++++++++++) weather_NWSWeather__forecast
+
+@@ Stable: FAILED (17) @@
+=- [-4 -> -3] ( -------------------) (+++++++             ) builtin_BuiltinVariable_call_setattr
+=- [-4 -> -3] (    ----------------) (++++++++++++++++++++) common_methods_invocations_foreach_inputs_sample_func__sample_rightmost_arg
+=- [-4 -> -3] ( -------------------) (++++++++++++++++++++) common_utils_TestCase_genSparseTensor
+=- [-4 -> -3] ( -------------------) (++++++++++++++++    ) dataframeeditor_DataFrameView_next_index_name
+=- [-4 -> -3] ( -------------------) (++++++++++++++++++++) doc_DocCLI_display_plugin_list
+=- [-4 -> -3] ( -------------------) (+++++++             ) doc_DocCLI_get_role_man_text
+=- [-4 -> -3] ( -------------------) (++++++++++++++++++++) figure_FigureBase_colorbar
+=- [-4 -> -3] ( -------------------) (++++++++++++        ) galaxy_GalaxyCLI_execute_list_collection
+=- [-4 -> -3] (  ------------------) (++++++++++++++++++++) generator_GenOpTestCase_out_variant_op_test_case_generator
+=- [-4 -> -3] ( -------------------) (+++++++++++         ) kernel_SpyderKernel_get_fault_text
+=- [-4 -> -3] ( -------------------) (++++                ) main_widget_PylintWidget_parse_output
+=- [-4 -> -3] ( -------------------) (+                   ) patches__Curve__get_arrow_wedge
+=- [-4 -> -3] ( -------------------) (++++++              ) polar_RadialTick__determine_anchor
+=- [-4 -> -3] (--------------------) (++++++++++++++++++++) sharding_policies_MaxShardSizePolicy__add_partition
+=- [-4 -> -3] ( -------------------) (++++++++++++++++++++) symbolic_shapes_ShapeEnv_bind_symbols
+=- [-4 -> -3] ( -------------------) (++++++++++++        ) text_CountVectorizer__limit_features
+</report>
+
 <no-train>
 ```CEDARScript
 
-/*
-Moved method now at 2-char indent:
--- [0 -> -4] (                  --) (++++++++++++++++++++) autosave_AutosaveForPlugin_get_files_to_recover
--- [0 -> -4] (--------------------) (++++++++++++++++++++) base_BaseHandler_adapt_method_mode
--- [0 -> -4] (                   -) (++++++++++++++++++++) gradient_checker_GradientChecker__assertInferTensorChecks
--- [0 -> -4] (             -------) (++++++++++++++++++++) i18n_JavaScriptCatalog_get_paths
-@ Stable: FAILED (15) @@
-=- [-4 -> -4] ( -------------------) (++++++++++++++++++++) common_methods_invocations_foreach_inputs_sample_func__sample_rightmost_arg
-
+/* makemessages.py
+#### # Refactor Command.add_arguments
+####
+#### Refactor the `add_arguments` method in the `Command` class to be a stand alone, top level function.
+#### Name the new function `add_arguments`, exactly the same name as the existing method.
+#### Update any existing `self.add_arguments` calls to work with the new `add_arguments` function.
 */
+
+-- 1. Move the `add_arguments` method from the `Command` class, placing it at the top level, just before the line where its class starts
+UPDATE CLASS "Command"
+FROM FILE "makemessages.py"
+MOVE METHOD "add_arguments"
+INSERT BEFORE CLASS "Command"
+RELATIVE INDENTATION 0;
+
+-- 2. Update the copied function to remove references to `self`
+UPDATE FUNCTION "add_arguments"
+FROM FILE "makemessages.py"
+REPLACE WHOLE WITH CASE
+WHEN REGEX r'''def add_arguments\(''' THEN SUB
+r'''def add_arguments\(self,'''
+r'''def add_arguments(parser)'''
+END;
+
+-- 3. Update ALL call sites of the method `add_arguments` to call the new top-level function with the same name
+UPDATE CLASS "Command"
+FROM FILE "makemessages.py"
+REPLACE BODY WITH CASE
+WHEN REGEX r'''self\.add_arguments\(''' THEN SUB
+r'''self\.(add_arguments\()'''
+r'''\1'''
+END;
+```
 
 /* config.py
 Doubled fun signature:

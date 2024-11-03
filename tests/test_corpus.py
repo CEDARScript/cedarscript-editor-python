@@ -90,8 +90,10 @@ def test_corpus(editor: CEDARScriptEditor, test_case: str):
                     continue
                 # Find corresponding expected file in test directory
                 rel_path = path.relative_to(editor.root_path)
+                if str(rel_path).startswith("."):
+                    continue
                 expected_file = test_dir / f"expected.{rel_path}"
-                assert expected_file.exists(), f"Expected file not found: {expected_file}"
+                assert expected_file.exists(), f"'expecteed.*' file not found: {expected_file}"
 
                 expected_content = file_to_lines(expected_file, rel_path)
                 actual_content = file_to_lines(path, rel_path)

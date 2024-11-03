@@ -13,5 +13,15 @@ FROM FILE "base.py"
 MOVE METHOD "adapt_method_mode"
 INSERT BEFORE CLASS "BaseHandler"
 RELATIVE INDENTATION 0;
+
 ```
+# TODO Skipped. Must fix.
+# Try CST-based indentation discovery
+-- Move the `__get_brackets` method from the `CodeEditor` class, placing it at the top level, just before the line where its class starts
+UPDATE CLASS "CodeEditor"
+FROM FILE "codeeditor.py"
+MOVE METHOD "__get_brackets"
+INSERT BEFORE CLASS "CodeEditor"
+RELATIVE INDENTATION 0;
+
 </no-train>
