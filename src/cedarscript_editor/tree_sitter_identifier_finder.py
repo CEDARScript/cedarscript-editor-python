@@ -34,6 +34,7 @@ class TreeSitterIdentifierFinder(IdentifierFinder):
     """
 
     def __init__(self, fname: str, source: str | Sequence[str], parent_restriction: ParentRestriction = None):
+        super().__init__()
         self.parent_restriction = parent_restriction
         match source:
             case str() as s:
@@ -65,6 +66,7 @@ class TreeSitterIdentifierFinder(IdentifierFinder):
                 # Returns IdentifierBoundaries
                 return self._find_identifier(marker, parent_restriction)
 
+
     def _find_identifier(self,
         marker: Marker,
         parent_restriction: ParentRestriction
@@ -84,9 +86,6 @@ class TreeSitterIdentifierFinder(IdentifierFinder):
         """
         query_info_key = marker.type
         identifier_name = marker.value
-        match marker.type:
-            case 'method':
-                query_info_key = 'function'
         try:
             all_restrictions: list[ParentRestriction] = [parent_restriction]
             # Extract parent name if using dot notation
@@ -94,29 +93,9 @@ class TreeSitterIdentifierFinder(IdentifierFinder):
                 *parent_parts, identifier_name = identifier_name.split('.')
                 all_restrictions.append("." + '.'.join(reversed(parent_parts)))
 
+            identifier_type = marker.type
             # Get all node candidates first
-            candidate_nodes = (
-                self.language.query(self.query_info[query_info_key].format(name=identifier_name))
-                .captures(self.tree.root_node)
-            )
-            if not candidate_nodes:
-                return None
-
-            # Convert captures to boundaries and filter by parent
-            candidates: list[IdentifierBoundaries] = []
-            for ib in capture2identifier_boundaries(candidate_nodes, self.lines):
-                # For methods, verify the immediate parent is a class
-                if marker.type == 'method':
-                    if not ib.parents or not ib.parents[0].parent_type.startswith('class'):
-                        continue
-                # Check parent restriction (e.g., specific class name)
-                candidate_matched_all_restrictions = True
-                for pr in all_restrictions:
-                    if not ib.match_parent(pr):
-                        candidate_matched_all_restrictions = False
-                        break
-                if candidate_matched_all_restrictions:
-                    candidates.append(ib)
+            candidates = self.find_identifiers(query_info_key, identifier_name, all_restrictions)
         except Exception as e:
             raise ValueError(f"Unable to capture nodes for {marker}: {e}") from e
 
@@ -140,6 +119,34 @@ class TreeSitterIdentifierFinder(IdentifierFinder):
             case RelativeMarker(qualifier=relative_position_type):
                 return result.location_to_search_range(relative_position_type)
         return result
+
+    def find_identifiers(
+        self, identifier_type: str, name: str, all_restrictions: list[ParentRestriction] = []
+    ) -> list[IdentifierBoundaries]:
+        if not self.language:
+            return []
+        match identifier_type:
+            case 'method':
+                identifier_type = 'function'
+        candidate_nodes = self.language.query(self.query_info[identifier_type].format(name=name)).captures(self.tree.root_node)
+        if not candidate_nodes:
+            return []
+        # Convert captures to boundaries and filter by parent
+        candidates: list[IdentifierBoundaries] = []
+        for ib in capture2identifier_boundaries(candidate_nodes, self.lines):
+            # For methods, verify the immediate parent is a class
+            if identifier_type == 'method':
+                if not ib.parents or not ib.parents[0].parent_type.startswith('class'):
+                    continue
+            # Check parent restriction (e.g., specific class name)
+            candidate_matched_all_restrictions = True
+            for pr in all_restrictions:
+                if not ib.match_parent(pr):
+                    candidate_matched_all_restrictions = False
+                    break
+            if candidate_matched_all_restrictions:
+                candidates.append(ib)
+        return candidates
 
 
 def _get_by_offset(obj: Sequence, offset: int):

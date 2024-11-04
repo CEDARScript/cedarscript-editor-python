@@ -104,9 +104,9 @@ class IndentationInfo(NamedTuple):
             ['        def example():', '            print('Hello')']
             :param target_lines:
         """
-        context_indent_char_count = cls.from_content(target_lines).char_count
+        context_indent_char_count = cls.from_content(target_lines, identifier_finder).char_count
         return (cls.
-            from_content(content).
+            from_content(content, identifier_finder).
             _replace(char_count=context_indent_char_count).
             _shift_indentation(
                 content, target_reference_indentation_count, relindent_level
@@ -146,19 +146,31 @@ class IndentationInfo(NamedTuple):
               character count by analyzing patterns and using GCD.
         """
         # TODO Always send str?
-        lines = [x for x in content.splitlines() if x.strip()] if isinstance(content, str) else content
+        indent_lengths = []
+        if identifier_finder:
+            indent_lengths = []
+            for ib in identifier_finder.find_all_callables:
+                if ib.whole and ib.whole.indent:
+                    indent_lengths.append(ib.whole.indent)
+                if ib.body and ib.body.indent:
+                    indent_lengths.append(ib.body.indent)
+            has_zero_indent = any((i == 0 for i in indent_lengths))
 
-        indentations = [extract_indentation(line) for line in lines if line.strip()]
-        has_zero_indent = any((i == '' for i in indentations))
-        indentations = [indent for indent in indentations if indent]
+        if not (indent_lengths):
+            lines = [x for x in content.splitlines() if x.strip()] if isinstance(content, str) else content
+            indentations = [extract_indentation(line) for line in lines if line.strip()]
+            has_zero_indent = any((i == '' for i in indentations))
+            indentations = [indent for indent in indentations if indent]
 
-        if not indentations:
-            return cls(4, ' ', 0, True, "No indentation found. Assuming 4 spaces (PEP 8).")
+            if not indentations:
+                return cls(4, ' ', 0, True, "No indentation found. Assuming 4 spaces (PEP 8).")
 
-        indent_chars = Counter(indent[0] for indent in indentations)
-        dominant_char = ' ' if indent_chars.get(' ', 0) >= indent_chars.get('\t', 0) else '\t'
+            indent_chars = Counter(indent[0] for indent in indentations)
+            dominant_char = ' ' if indent_chars.get(' ', 0) >= indent_chars.get('\t', 0) else '\t'
 
-        indent_lengths = [len(indent) for indent in indentations]
+            indent_lengths = [len(indent) for indent in indentations]
+        else:
+            dominant_char = ' '
 
         char_count = 1
         if dominant_char != '\t':
@@ -167,7 +179,7 @@ class IndentationInfo(NamedTuple):
         min_indent_chars = 0 if has_zero_indent else min(indent_lengths) if indent_lengths else 0
         min_indent_level = min_indent_chars // char_count
 
-        consistency = all(len(indent) % char_count == 0 for indent in indentations if indent)
+        consistency = all(indent_len % char_count == 0 for indent_len in indent_lengths if indent_len)
         match dominant_char:
             case ' ':
                 domcharstr = 'space'

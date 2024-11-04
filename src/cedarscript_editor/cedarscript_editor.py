@@ -156,21 +156,26 @@ class CEDARScriptEditor:
                     region, action, lines, RangeSpec.EMPTY, identifier_finder
                 )
                 content = IndentationInfo.shift_indentation(
-                    content_range.read(lines), lines, search_range.indent, relindent_level
+                    content_range.read(lines), lines, search_range.indent, relindent_level,
+                    identifier_finder
                 )
                 content = (region, content)
             case _:
                 match action:
                     case MoveClause(insert_position=region, relative_indentation=relindent_level):
                         content = IndentationInfo.shift_indentation(
-                            move_src_range.read(lines), lines, search_range.indent, relindent_level
+                            move_src_range.read(lines), lines, search_range.indent, relindent_level,
+                            identifier_finder
                         )
                     case DeleteClause():
                         pass
                     case _:
                         raise ValueError(f'Invalid content: {content}')
 
-        self._apply_action(action, lines, search_range, content, range_spec_to_delete=move_src_range)
+        self._apply_action(
+            action, lines, search_range, content,
+            range_spec_to_delete=move_src_range, identifier_finder=identifier_finder
+        )
 
         write_file(file_path, lines)
 
@@ -179,7 +184,8 @@ class CEDARScriptEditor:
     @staticmethod
     def _apply_action(
         action: EditingAction, lines: Sequence[str], range_spec: RangeSpec, content: str | None = None,
-        range_spec_to_delete: RangeSpec | None = None
+        range_spec_to_delete: RangeSpec | None = None,
+        identifier_finder: IdentifierFinder | None = None
     ):
         match action:
 
@@ -199,7 +205,7 @@ class CEDARScriptEditor:
             case ReplaceClause() | InsertClause():
                 match content:
                     case str():
-                        content = IndentationInfo.from_content(lines).apply_relative_indents(
+                        content = IndentationInfo.from_content(lines, identifier_finder).apply_relative_indents(
                             content, range_spec.indent
                         )
                     case Sequence():

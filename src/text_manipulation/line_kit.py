@@ -44,4 +44,4 @@ def extract_indentation(line: str) -> str:
         >>> extract_indentation("No indentation")
         ''
     """
-    return line[:len(line) - len(line.lstrip())]
+    return line[:get_line_indent_count(line)]

@@ -8,7 +8,6 @@ FROM FILE "codeeditor.py"
 MOVE METHOD "__get_brackets"
 INSERT BEFORE CLASS "CodeEditor"
 RELATIVE INDENTATION 0;
-```
 
 -- 1. Move the method to become a top-level function.
 UPDATE CLASS "AutosaveForPlugin"
@@ -23,5 +22,5 @@ FROM FILE "base.py"
 MOVE METHOD "adapt_method_mode"
 INSERT BEFORE CLASS "BaseHandler"
 RELATIVE INDENTATION 0;
-
+```
 </no-train>
