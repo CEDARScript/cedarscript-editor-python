@@ -37,12 +37,12 @@ LANG_TO_TREE_SITTER_QUERY = {
     ; Regular and async function definitions with optional docstring
     (function_definition
       name: (identifier) @_function_name
-      (#eq? @_function_name "{name}")
+      (#match? @_function_name "^{name}$")
       body: (block) @function.body) @function.definition
 
     (function_definition
       name: (identifier) @_function_name
-      (#eq? @_function_name "{name}")
+      (#match? @_function_name "^{name}$")
       body: (block
         .
         (expression_statement
@@ -55,14 +55,14 @@ LANG_TO_TREE_SITTER_QUERY = {
       (decorator)+
       (function_definition
         name: (identifier) @_function_name
-        (#eq? @_function_name "{name}")
+        (#match? @_function_name "^{name}$")
         body: (block) @function.body)) @function.definition
 
     (decorated_definition
       (decorator)+
       (function_definition
         name: (identifier) @_function_name
-        (#eq? @_function_name "{name}")
+        (#match? @_function_name "^{name}$")
         body: (block
           .
           (expression_statement
@@ -75,14 +75,14 @@ LANG_TO_TREE_SITTER_QUERY = {
       body: (block
         (function_definition
           name: (identifier) @_function_name
-          (#eq? @_function_name "{name}")
+          (#match? @_function_name "^{name}$")
           body: (block) @function.body) @function.definition))
 
     (class_definition
       body: (block
         (function_definition
           name: (identifier) @_function_name
-          (#eq? @_function_name "{name}")
+          (#match? @_function_name "^{name}$")
           body: (block
             .
             (expression_statement
@@ -95,12 +95,12 @@ LANG_TO_TREE_SITTER_QUERY = {
     ; Regular and decorated class definitions (including nested) with optional docstring
     (class_definition
       name: (identifier) @_class_name
-      (#eq? @_class_name "{name}")
+      (#match? @_class_name "^{name}$")
       body: (block) @class.body) @class.definition
 
     (class_definition
       name: (identifier) @_class_name
-      (#eq? @_class_name "{name}")
+      (#match? @_class_name "^{name}$")
       body: (block
         .
         (expression_statement
@@ -113,14 +113,14 @@ LANG_TO_TREE_SITTER_QUERY = {
       (decorator)+
       (class_definition
         name: (identifier) @_class_name
-        (#eq? @_class_name "{name}")
+        (#match? @_class_name "^{name}$")
         body: (block) @class.body)) @class.definition
 
     (decorated_definition
       (decorator)+
       (class_definition
         name: (identifier) @_class_name
-        (#eq? @_class_name "{name}")
+        (#match? @_class_name "^{name}$")
         body: (block
           .
           (expression_statement
@@ -133,14 +133,14 @@ LANG_TO_TREE_SITTER_QUERY = {
       body: (block
         (class_definition
           name: (identifier) @_class_name
-          (#eq? @_class_name "{name}")
+          (#match? @_class_name "^{name}$")
           body: (block) @class.body) @class.definition))
 
     (class_definition
       body: (block
         (class_definition
           name: (identifier) @_class_name
-          (#eq? @_class_name "{name}")
+          (#match? @_class_name "^{name}$")
           body: (block
             .
             (expression_statement
