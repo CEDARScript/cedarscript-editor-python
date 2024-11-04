@@ -19,53 +19,9 @@ from collections.abc import Sequence
 from math import gcd
 from typing import NamedTuple
 
+from .cst_kit import IdentifierFinder
 
-def get_line_indent_count_from_lines(lines: Sequence[str], index: int) -> int:
-    return get_line_indent_count(lines[index])
-
-
-def get_line_indent_count(line: str) -> int:
-    """
-    Count the number of leading whitespace characters in a line.
-
-    Args:
-        line (str): The input line to analyze.
-
-    Returns:
-        int: The number of leading whitespace characters.
-
-    Example:
-        >>> get_line_indent_count("    Hello")
-        4
-        >>> get_line_indent_count("\t\tWorld")
-        2
-    """
-    return len(line) - len(line.lstrip())
-
-
-def extract_indentation(line: str) -> str:
-    """
-    Extract the leading whitespace from a given line.
-
-    This function identifies and returns the leading whitespace characters
-    (spaces or tabs) from the beginning of the input line.
-
-    Args:
-        line (str): The input line to process.
-
-    Returns:
-        str: The leading whitespace of the line.
-
-    Examples:
-        >>> extract_indentation("    Hello")
-        '    '
-        >>> extract_indentation("\t\tWorld")
-        '\t\t'
-        >>> extract_indentation("No indentation")
-        ''
-    """
-    return line[:len(line) - len(line.lstrip())]
-
+from .line_kit import get_line_indent_count, extract_indentation
 
 class IndentationInfo(NamedTuple):
     """
@@ -117,7 +73,8 @@ class IndentationInfo(NamedTuple):
     @classmethod
     def shift_indentation(cls,
         content: Sequence[str], target_lines: Sequence[str], target_reference_indentation_count: int,
-        relindent_level: int | None
+        relindent_level: int | None = None,
+        identifier_finder: IdentifierFinder | None = None
     ) -> list[str]:
         """
         Returns 'content' with shifted indentation based on a relative indent level and a reference indentation count.
@@ -165,7 +122,10 @@ class IndentationInfo(NamedTuple):
         return [raw_line_adjuster(line) for line in content]
 
     @classmethod
-    def from_content(cls, content: str | Sequence[str]) -> 'IndentationInfo':
+    def from_content(
+        cls, content: str | Sequence[str],
+        identifier_finder: IdentifierFinder | None = None
+    ) -> 'IndentationInfo':
         """
         Analyzes the indentation in the given content and creates an IndentationInfo instance.
 

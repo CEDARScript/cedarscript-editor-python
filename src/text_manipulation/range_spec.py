@@ -17,7 +17,7 @@ from functools import total_ordering
 
 from cedarscript_ast_parser import Marker, RelativeMarker, RelativePositionType, MarkerType, BodyOrWhole
 
-from .indentation_kit import get_line_indent_count_from_lines
+from .line_kit import get_line_indent_count_from_lines
 
 MATCH_TYPES = ('exact', 'stripped', 'normalized', 'partial')
 

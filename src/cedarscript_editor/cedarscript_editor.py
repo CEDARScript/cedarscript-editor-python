@@ -11,10 +11,10 @@ from .case_filter import process_case_statement
 from cedarscript_ast_parser.cedarscript_ast_parser import MarkerCompatible, RelativeMarker, \
     RelativePositionType, Region, SingleFileClause
 from text_manipulation import (
-    IndentationInfo, IdentifierBoundaries, RangeSpec, read_file, write_file, bow_to_search_range
+    IndentationInfo, IdentifierBoundaries, RangeSpec, read_file, write_file, bow_to_search_range, IdentifierFinder
 )
 
-from .tree_sitter_identifier_finder import IdentifierFinder
+from .tree_sitter_identifier_finder import TreeSitterIdentifierFinder
 
 
 class CEDARScriptEditorException(Exception):
@@ -109,7 +109,7 @@ class CEDARScriptEditor:
         src = read_file(file_path)
         lines = src.splitlines()
 
-        identifier_finder = IdentifierFinder(file_path, src, RangeSpec.EMPTY)
+        identifier_finder = TreeSitterIdentifierFinder(file_path, src, RangeSpec.EMPTY)
             
         search_range = RangeSpec.EMPTY
         move_src_range = None
@@ -247,7 +247,7 @@ class CEDARScriptEditor:
 
 def find_index_range_for_region(region: BodyOrWhole | Marker | Segment | RelativeMarker,
                                 lines: Sequence[str],
-                                identifier_finder: IdentifierFinder,
+                                identifier_finder_IS_IT_USED: IdentifierFinder,
                                 search_range: RangeSpec | IdentifierBoundaries | None = None,
                                 ) -> RangeSpec:
     # BodyOrWhole | RelativeMarker | MarkerOrSegment
@@ -267,7 +267,7 @@ def find_index_range_for_region(region: BodyOrWhole | Marker | Segment | Relativ
                             pass
                         case _:
                             # TODO transform to RangeSpec
-                            mos = IdentifierFinder("TODO?.py", lines, RangeSpec.EMPTY)(mos, search_range).body
+                            mos = TreeSitterIdentifierFinder("TODO?.py", lines, RangeSpec.EMPTY)(mos, search_range).body
             index_range = mos.to_search_range(
                 lines,
                 search_range.start if search_range else 0,

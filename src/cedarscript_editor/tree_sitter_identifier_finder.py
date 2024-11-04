@@ -7,6 +7,7 @@ from cedarscript_ast_parser import Marker, MarkerType, Segment, RelativeMarker
 from grep_ast import filename_to_lang
 from text_manipulation.indentation_kit import get_line_indent_count
 from text_manipulation.range_spec import IdentifierBoundaries, RangeSpec, ParentInfo, ParentRestriction
+from text_manipulation import IdentifierFinder
 from tree_sitter_languages import get_language, get_parser
 
 from .tree_sitter_identifier_queries import LANG_TO_TREE_SITTER_QUERY
@@ -20,7 +21,7 @@ like functions and classes along with their hierarchical relationships.
 _log = logging.getLogger(__name__)
 
 
-class IdentifierFinder:
+class TreeSitterIdentifierFinder(IdentifierFinder):
     """Finds identifiers in source code based on markers and parent restrictions.
 
     Attributes:
@@ -44,11 +45,11 @@ class IdentifierFinder:
         if langstr is None:
             self.language = None
             self.query_info = None
-            _log.info(f"[IdentifierFinder] NO LANGUAGE for `{fname}`")
+            _log.info(f"[TreeSitterIdentifierFinder] NO LANGUAGE for `{fname}`")
             return
         self.query_info: dict[str, dict[str, str]] = LANG_TO_TREE_SITTER_QUERY[langstr]
         self.language = get_language(langstr)
-        _log.info(f"[IdentifierFinder] Selected {self.language}")
+        _log.info(f"[TreeSitterIdentifierFinder] Selected {self.language}")
         self.tree = get_parser(langstr).parse(bytes(source, "utf-8"))
 
     def __call__(
