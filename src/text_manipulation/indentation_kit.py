@@ -18,10 +18,14 @@ from collections import Counter
 from collections.abc import Sequence
 from math import gcd
 from typing import NamedTuple
+import re
 
 from .cst_kit import IdentifierFinder
 
 from .line_kit import get_line_indent_count, extract_indentation
+
+relative_indent_prefix = re.compile(r'^\s*@(-?\d+):(.*)')
+
 
 class IndentationInfo(NamedTuple):
     """
@@ -276,9 +280,12 @@ class IndentationInfo(NamedTuple):
             return new_indent + line.lstrip()
         return adjust_line
 
-    def apply_relative_indents(self, content: str | Sequence[str], context_indent_count: int = 0) -> list[str]:
+    def apply_relative_indents(
+            self, content: str | Sequence[str], reference_indent_count: int = 0,
+            treat_unprefixed_line_as_relative: bool = False
+    ) -> list[str]:
         """
-        Apply relative indentation based on annotations in the content.
+        Apply relative indentation based on optional annotations in the content.
 
         This method processes the input content, interpreting special annotations
         to apply relative indentation. It uses '@' followed by a number to indicate
@@ -287,7 +294,7 @@ class IndentationInfo(NamedTuple):
         Args:
             content (str | Sequence[str]): The content to process. Can be a string
                                            or a sequence of strings.
-            context_indent_count (int, optional): The base indentation count of the
+            reference_indent_count (int, optional): The base indentation count of the
                                                   context. Defaults to 0.
 
         Returns:
@@ -312,23 +319,29 @@ class IndentationInfo(NamedTuple):
             ['    def example():', '        print('Hello')', '            if True:', '                print('World')']
         """
         # TODO Always send str?
-        lines = [l.lstrip() for l in content.splitlines() if l.strip()] if isinstance(content, str) else content
-
-        context_indent_level = self.char_count_to_level(context_indent_count)
+        lines = [l for l in content.strip('\n').splitlines()] if isinstance(content, str) else content
+        reference_indent_level = self.char_count_to_level(reference_indent_count)
         for i in range(len(lines)):
             line = lines[i]
-            parts = line.split(':', 1)
-            if len(parts) == 2 and parts[0].startswith('@'):
-                relative_indent_level = int(parts[0][1:])
-                absolute_indent_level = context_indent_level + relative_indent_level
-                assert absolute_indent_level >= 0, (
-                    f"Final indentation for line `{line.strip()}` cannot be negative "
-                    f"({absolute_indent_level})"
-                )
-                lines[i] = self.level_to_chars(absolute_indent_level) + parts[1].lstrip()
-            else:
-                absolute_indent_level = context_indent_level
-                lines[i] = self.level_to_chars(absolute_indent_level) + line.lstrip()
+            match relative_indent_prefix.match(line):
+                case re.Match() as m:
+                    relative_indent_level, line = m.groups()
+                    relative_indent_level = int(relative_indent_level)
+                    line = line.lstrip()
+                    absolute_indent_level = reference_indent_level + relative_indent_level
+                case _:
+                    if treat_unprefixed_line_as_relative:
+                        line = line.lstrip()
+                        relative_indent_level = self.char_count_to_level(get_line_indent_count(line))
+                        absolute_indent_level = reference_indent_level + relative_indent_level
+                    else:
+                        absolute_indent_level = 0
+
+            assert absolute_indent_level >= 0, (
+                f"Final indent level for line `{line.strip()}` cannot be negative "
+                f"({absolute_indent_level})"
+            )
+            lines[i] = self.level_to_chars(absolute_indent_level) + line
 
         return lines
 

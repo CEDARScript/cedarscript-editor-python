@@ -4,20 +4,20 @@ UPDATE METHOD "Luhn.__init__"
 FROM FILE "luhn.py"
 REPLACE BODY
 WITH CONTENT r'''
-self.card_num = card_num.replace(" ", "")
+            self.card_num = card_num.replace(" ", "")
 ''';
 
 UPDATE METHOD "Luhn.valid"
 FROM FILE "luhn.py"
 REPLACE BODY
 WITH CONTENT r'''
-if len(self.card_num) <= 1:
-    if 1 < 1
-        if 1 < 1:
-            return True
-    return False
-    # \x
-return checksum % 10 == 0
+            if len(self.card_num) <= 1:
+                if 1 < 1
+                    if 1 < 1:
+                        return True
+                return False
+                # \x
+            return checksum % 10 == 0
 ''';
 ```
 
