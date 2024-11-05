@@ -18,12 +18,12 @@ logger = logging.getLogger("django.request")
 
 
 def adapt_method_mode(
-        self,
-        is_async,
-        method,
-        method_is_async=None,
-        debug=False,
-        name=None,
+    self,
+    is_async,
+    method,
+    method_is_async=None,
+    debug=False,
+    name=None,
 ):
     """
     Adapt a method to be in the correct "mode":
@@ -214,7 +214,7 @@ class BaseHandler:
                     response,
                     middleware_method,
                     name="%s.process_template_response"
-                         % (middleware_method.__self__.__class__.__name__,),
+                    % (middleware_method.__self__.__class__.__name__,),
                 )
             try:
                 response = response.render()
@@ -275,7 +275,7 @@ class BaseHandler:
                     response,
                     middleware_method,
                     name="%s.process_template_response"
-                         % (middleware_method.__self__.__class__.__name__,),
+                    % (middleware_method.__self__.__class__.__name__,),
                 )
             try:
                 if asyncio.iscoroutinefunction(response.render):
