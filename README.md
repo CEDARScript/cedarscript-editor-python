@@ -5,7 +5,7 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
-`CEDARScript Editor (Python)` is a [CEDARScript](https://github.com/CEDARScript/cedarscript-grammar#readme) runtime
+`CEDARScript Editor (Python)` is a [CEDARScript](https://bit.ly/cedarscript) runtime
 for interpreting `CEDARScript` scripts and performing code analysis and modification operations on a codebase.
 
 CEDARScript enables offloading _low-level code syntax and structure concerns_, such as indentation and line counting,
