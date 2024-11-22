@@ -26,7 +26,7 @@ dependencies = [
     "grep-ast==0.3.3",
     # https://github.com/tree-sitter/py-tree-sitter/issues/303
     # https://github.com/grantjenks/py-tree-sitter-languages/issues/64
-    "tree-sitter==0.21.3", # 0.22 breaks tree-sitter-languages
+    "tree-sitter==0.23.2", # 0.22 breaks tree-sitter-languages
     "tree-sitter-languages==1.10.2",
 ]
 requires-python = ">=3.11"
