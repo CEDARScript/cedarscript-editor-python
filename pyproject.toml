@@ -22,7 +22,7 @@ classifiers = [
 ]
 keywords = ["cedarscript", "code-editing", "refactoring", "code-analysis", "sql-like", "ai-assisted-development"]
 dependencies = [
-    "cedarscript-ast-parser>=0.5.6",
+    "cedarscript-ast-parser>=0.5.8",
     "grep-ast==0.3.3",
     # https://github.com/tree-sitter/py-tree-sitter/issues/303
     # https://github.com/grantjenks/py-tree-sitter-languages/issues/64
