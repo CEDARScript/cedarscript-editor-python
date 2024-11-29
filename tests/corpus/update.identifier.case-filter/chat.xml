@@ -37,5 +37,15 @@ REPLACE BODY WITH CASE
     r'''self\.(_make_source_table)'''
     r'''\1'''
 END;
+
+UPDATE FILE "1.kts"
+REPLACE WHOLE WITH CASE
+  WHEN LINE 'this.mainClassName = mainVerticleName' THEN SUB
+    r'''this\.mainClassName = mainVerticleName'''
+    'mainClass.set(mainVerticleName)'
+  WHEN LINE '"--launcher-class=${application.mainClassName}",' THEN SUB
+    r'''application\.mainClassName'''
+    'application.mainClass.get()'
+  END;
 ```
 </no-train>
