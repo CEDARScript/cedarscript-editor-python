@@ -82,6 +82,8 @@ def _matches_when(line: str, when: CaseWhen, indent_level: int, line_num: int) -
         return True
     if when.indent_level is not None and indent_level == when.indent_level:
         return True
+    if when.line_matcher and stripped == when.line_matcher.strip():
+        return True
     if when.line_number is not None and line_num == when.line_number:
         return True
     return False
