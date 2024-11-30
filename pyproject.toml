@@ -8,11 +8,11 @@ dynamic = ["version"]
 description = "A library for executing CEDARScript, a SQL-like language for code analysis and transformations"
 authors = [{ name = "Elifarley", email = "cedarscript@orgecc.com" }]
 readme = "README.md"
-license = {text = "AGPL-3.0"}
+license = {text = "Apache-2.0"}
 classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.12",
-    "License :: OSI Approved :: GNU Affero General Public License v3",
+    "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
     "Intended Audience :: Developers",
     "Topic :: Software Development :: Libraries :: Python Modules",
@@ -22,7 +22,7 @@ classifiers = [
 ]
 keywords = ["cedarscript", "code-editing", "refactoring", "code-analysis", "sql-like", "ai-assisted-development"]
 dependencies = [
-    "cedarscript-ast-parser>=0.5.8",
+    "cedarscript-ast-parser>=0.6.1",
     "grep-ast==0.3.3",
     # https://github.com/tree-sitter/py-tree-sitter/issues/303
     # https://github.com/grantjenks/py-tree-sitter-languages/issues/64
