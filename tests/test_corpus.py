@@ -7,6 +7,7 @@ from pathlib import Path
 
 from cedarscript_editor import find_commands, CEDARScriptEditor
 
+_no_windows = '!nowindows'
 
 def get_test_cases() -> list[str]:
     """Get all test cases from tests/corpus directory.
@@ -41,9 +42,8 @@ def editor(tmp_path_factory):
 @pytest.mark.parametrize('test_case', get_test_cases())
 def test_corpus(editor: CEDARScriptEditor, test_case: str):
     """Test CEDARScript commands from chat.xml files in corpus."""
-    if test_case.casefold().endswith('!nowindows'):
-        if sys.platform == 'win32':
-            pytest.skip(f"Cannot run under Windows: {test_case.removesuffix('!nowindows')}")
+    if test_case.casefold().endswith(_no_windows) and sys.platform == 'win32':
+        pytest.skip(f"Cannot run under Windows: {test_case.removesuffix(_no_windows)}")
 
     try:
         corpus_dir = Path(__file__).parent / 'corpus'
@@ -95,10 +95,10 @@ def test_corpus(editor: CEDARScriptEditor, test_case: str):
                     continue
                 # Find corresponding expected file in test directory
                 rel_path = path.relative_to(editor.root_path)
-                if str(rel_path).startswith("."):
+                if str(rel_path).startswith(".") or str(rel_path).endswith("~"):
                     continue
                 expected_file = test_dir / f"expected.{rel_path}"
-                assert expected_file.exists(), f"'expected.*' file not found: {expected_file}"
+                assert expected_file.exists(), f"'expected.*' file not found: '{expected_file}'"
 
                 expected_content = file_to_lines(expected_file, rel_path)
                 actual_content = file_to_lines(path, rel_path)
