@@ -8,7 +8,7 @@ manipulations, which are useful for tasks such as code analysis and transformati
 
 from collections.abc import Sequence
 from typing import Protocol, runtime_checkable
-from os import PathLike
+from os import PathLike, path
 
 from cedarscript_ast_parser import Marker, RelativeMarker, RelativePositionType, Segment, MarkerType, BodyOrWhole
 from .range_spec import IdentifierBoundaries, RangeSpec
@@ -24,7 +24,7 @@ def read_file(file_path: str | PathLike) -> str:
     Returns:
         str: The contents of the file as a string.
     """
-    with open(file_path, 'r') as file:
+    with open(path.normpath(file_path), 'r') as file:
         return file.read()
 
 
@@ -36,7 +36,7 @@ def write_file(file_path: str | PathLike, lines: Sequence[str]):
         file_path (str | PathLike): The path to the file to be written.
         lines (Sequence[str]): The lines to be written to the file.
     """
-    with open(file_path, 'w') as file:
+    with open(path.normpath(file_path), 'w') as file:
         file.writelines([line + '\n' for line in lines])
 
 

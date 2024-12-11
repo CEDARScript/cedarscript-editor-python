@@ -13,6 +13,7 @@ import re
 from collections.abc import Sequence
 from typing import NamedTuple, TypeAlias
 from functools import total_ordering
+from dataclasses import dataclass, field
 
 
 from cedarscript_ast_parser import Marker, RelativeMarker, RelativePositionType, MarkerType, BodyOrWhole
@@ -331,8 +332,8 @@ class ParentInfo(NamedTuple):
 
 ParentRestriction: TypeAlias = RangeSpec | str | None
 
-
-class IdentifierBoundaries(NamedTuple):
+@dataclass
+class IdentifierBoundaries:
     """
     Represents the boundaries of an identifier in code, including its whole range and body range.
 
@@ -347,8 +348,12 @@ class IdentifierBoundaries(NamedTuple):
     whole: RangeSpec
     body: RangeSpec | None = None
     docstring: RangeSpec | None = None
-    decorators: list[RangeSpec] = []
-    parents: list[ParentInfo] = []
+    decorators: list[RangeSpec] = field(default_factory=list)
+    parents: list[ParentInfo] = field(default_factory=list)
+
+    def append_decorator(self, decorator: RangeSpec):
+        self.decorators.append(decorator)
+        self.whole = self.whole._replace(start = min(self.whole.start, decorator.start))
 
     def __str__(self):
         return f'IdentifierBoundaries({self.whole} (BODY: {self.body}) )'

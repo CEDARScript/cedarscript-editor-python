@@ -30,126 +30,110 @@
 #     except KeyError:
 #         return
 
+_common_template = """
+    ; Common pattern for body and docstring capture
+    body: (block
+        .
+        (expression_statement
+            (string) @{type}.docstring)?
+        .
+    ) @{type}.body
+"""
+
+_definition_base_template = """
+    name: (identifier) @_{type}_name
+    (#match? @_{type}_name "^{{name}}$")
+    (#set! role name)
+"""
 
 LANG_TO_TREE_SITTER_QUERY = {
     "python": {
         'function': """
-    ; Regular and async function definitions with optional docstring
+; Function Definitions
+(function_definition
+    {definition_base}
+    {common_body}
+) @function.definition
+
+; Decorated Function Definitions
+(decorated_definition
+    (decorator)+ @function.decorator
     (function_definition
-      name: (identifier) @_function_name
-      (#match? @_function_name "^{name}$")
-      body: (block) @function.body) @function.definition
+        {definition_base}
+        {common_body}
+    ) @function.definition
+)
 
-    (function_definition
-      name: (identifier) @_function_name
-      (#match? @_function_name "^{name}$")
-      body: (block
-        .
-        (expression_statement
-          (string) @function.docstring)?
-        .
-        (_)*))
-
-    ; Decorated function definitions (including async) with optional docstring
-    (decorated_definition
-      (decorator)+
-      (function_definition
-        name: (identifier) @_function_name
-        (#match? @_function_name "^{name}$")
-        body: (block) @function.body)) @function.definition
-
-    (decorated_definition
-      (decorator)+
-      (function_definition
-        name: (identifier) @_function_name
-        (#match? @_function_name "^{name}$")
-        body: (block
-          .
-          (expression_statement
-            (string) @function.docstring)?
-          .
-          (_)*)))
-
-    ; Method definitions in classes (including async and decorated) with optional docstring
-    (class_definition
-      body: (block
+; Methods in Classes
+(class_definition
+    body: (block
         (function_definition
-          name: (identifier) @_function_name
-          (#match? @_function_name "^{name}$")
-          body: (block) @function.body) @function.definition))
+            {definition_base}
+            {common_body}
+        ) @function.definition
+    )
+)
 
-    (class_definition
-      body: (block
-        (function_definition
-          name: (identifier) @_function_name
-          (#match? @_function_name "^{name}$")
-          body: (block
-            .
-            (expression_statement
-              (string) @function.docstring)?
-            .
-            (_)*))))
-""",
+; Decorated Methods in Classes
+(class_definition
+    body: (block
+        (decorated_definition
+            (decorator)+ @function.decorator
+            (function_definition
+                {definition_base}
+                {common_body}
+            ) @function.definition
+        )
+    )
+)
+""".format(
+            definition_base=_definition_base_template.format(type="function"),
+            common_body=_common_template.format(type="function")
+        ),
 
         'class': """
-    ; Regular and decorated class definitions (including nested) with optional docstring
+; Class Definitions
+(class_definition
+    {definition_base}
+    {common_body}
+) @class.definition
+
+; Decorated Class Definitions
+(decorated_definition
+    (decorator)+ @class.decorator
     (class_definition
-      name: (identifier) @_class_name
-      (#match? @_class_name "^{name}$")
-      body: (block) @class.body) @class.definition
+        {definition_base}
+        {common_body}
+    ) @class.definition
+)
 
-    (class_definition
-      name: (identifier) @_class_name
-      (#match? @_class_name "^{name}$")
-      body: (block
-        .
-        (expression_statement
-          (string) @class.docstring)?
-        .
-        (_)*))
-
-    ; Decorated class definitions
-    (decorated_definition
-      (decorator)+
-      (class_definition
-        name: (identifier) @_class_name
-        (#match? @_class_name "^{name}$")
-        body: (block) @class.body)) @class.definition
-
-    (decorated_definition
-      (decorator)+
-      (class_definition
-        name: (identifier) @_class_name
-        (#match? @_class_name "^{name}$")
-        body: (block
-          .
-          (expression_statement
-            (string) @class.docstring)?
-          .
-          (_)*)))
-
-    ; Nested class definitions within other classes
-    (class_definition
-      body: (block
+; Nested Classes
+(class_definition
+    body: (block
         (class_definition
-          name: (identifier) @_class_name
-          (#match? @_class_name "^{name}$")
-          body: (block) @class.body) @class.definition))
+            {definition_base}
+            {common_body}
+        ) @class.definition
+    )
+)
 
-    (class_definition
-      body: (block
-        (class_definition
-          name: (identifier) @_class_name
-          (#match? @_class_name "^{name}$")
-          body: (block
-            .
-            (expression_statement
-              (string) @class.docstring)?
-            .
-            (_)*))))
-"""
-    },
-    "kotlin": {
+; Decorated Nested Classes
+(class_definition
+    body: (block
+        (decorated_definition
+            (decorator)+ @class.decorator
+            (class_definition
+                {definition_base}
+                {common_body}
+            ) @class.definition
+        )
+    )
+)
+""".format(
+            definition_base=_definition_base_template.format(type="class"),
+            common_body=_common_template.format(type="class")
+        )
+    }, "kotlin": {
         'function': """
     ; Regular function definitions with optional annotations and KDoc
     (function_declaration

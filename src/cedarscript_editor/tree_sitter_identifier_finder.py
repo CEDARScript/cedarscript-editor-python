@@ -128,7 +128,8 @@ class TreeSitterIdentifierFinder(IdentifierFinder):
         match identifier_type:
             case 'method':
                 identifier_type = 'function'
-        candidate_nodes = self.language.query(self.query_info[identifier_type].format(name=name)).captures(self.tree.root_node)
+        _query = self.query_info[identifier_type].format(name=name)
+        candidate_nodes = self.language.query(_query).captures(self.tree.root_node)
         if not candidate_nodes:
             return []
         # Convert captures to boundaries and filter by parent
@@ -198,9 +199,9 @@ class CaptureInfo:
         current = self.node.parent
 
         while current:
-            # Check if current node is a container type we care about
-            if current.type.endswith('_definition'):
-                # Try to find the name node - exact field depends on language
+            # Check if current node is a container type we care about - TODO exact field depends on language
+            if current.type.endswith('_definition') and current.type != 'decorated_definition':
+                # Try to find the name node - TODO exact field depends on language
                 name = None
                 for child in current.children:
                     if child.type == 'identifier' or child.type == 'name':
@@ -242,14 +243,13 @@ def associate_identifier_parts(captures: Iterable[CaptureInfo], lines: Sequence[
                 raise ValueError(f'Parent node not found for [{capture.capture_type} - {capture.node_type}] ({capture.node.text.decode("utf-8").strip()})')
             match capture_type:
                 case 'body':
-                    parent = parent._replace(body=range_spec)
+                    parent.body=range_spec
                 case 'docstring':
-                    parent = parent._replace(docstring=range_spec)
+                    parent.docstring=range_spec
                 case 'decorator':
-                    parent = parent.decorators.append(range_spec)
+                    parent.append_decorator(range_spec)
                 case _ as invalid:
                     raise ValueError(f'Invalid capture type: {invalid}')
-            identifier_map[parent_key] = parent
 
     return sorted(identifier_map.values(), key=lambda x: x.whole.start)
 
@@ -260,6 +260,8 @@ def find_parent_definition(node):
     while node.parent:
         node = node.parent
         if node.type.endswith('_definition'):
+            if node.type == 'decorated_definition':
+                node = node.named_children[0].next_named_sibling
             return node
     return None
 
@@ -278,4 +280,46 @@ def capture2identifier_boundaries(captures, lines: Sequence[str]) -> list[Identi
     unique_captures = {}
     for capture in captures:
         unique_captures[f'{capture.range[0]}:{capture.capture_type}'] = capture
-    return associate_identifier_parts(unique_captures.values(), lines)
+    # unique_captures={
+    # '157:function.decorator': CaptureInfo(capture_type='function.decorator', node=<Node type=decorator, start_point=(157, 4), end_point=(157, 17)>),
+    # '158:function.definition': CaptureInfo(capture_type='function.definition', node=<Node type=function_definition, start_point=(158, 4), end_point=(207, 19)>),
+    # '159:function.body': CaptureInfo(capture_type='function.body', node=<Node type=block, start_point=(159, 8), end_point=(207, 19)>)
+    # }
+    return associate_identifier_parts(sort_captures(unique_captures), lines)
+
+def parse_capture_key(key):
+    """
+    Parses the dictionary key into line number and capture type.
+    Args:
+        key (str): The key in the format 'line_number:capture_type'.
+    Returns:
+        tuple: (line_number as int, capture_type as str)
+    """
+    line_number, capture_type = key.split(':')
+    return int(line_number), capture_type.split('.')[-1]
+
+def get_sort_priority():
+    """
+    Returns a dictionary mapping capture types to their sort priority.
+    Returns:
+        dict: Capture type priorities.
+    """
+    return {'definition': 1, 'decorator': 2, 'body': 3, 'docstring': 4}
+
+def sort_captures(captures):
+    """
+    Sorts the values of the captures dictionary by capture type and line number.
+    Args:
+        captures (dict): The dictionary to sort.
+    Returns:
+        list: Sorted list of values.
+    """
+    priority = get_sort_priority()
+    sorted_items = sorted(
+        captures.items(),
+        key=lambda item: (
+            priority[parse_capture_key(item[0])[1]],  # Sort by capture type priority
+            parse_capture_key(item[0])[0]  # Then by line number
+        )
+    )
+    return [value for _, value in sorted_items]
