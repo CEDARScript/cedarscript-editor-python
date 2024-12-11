@@ -9,7 +9,7 @@ from text_manipulation.indentation_kit import get_line_indent_count
 from text_manipulation.range_spec import IdentifierBoundaries, RangeSpec, ParentInfo, ParentRestriction
 from text_manipulation import IdentifierFinder
 from tree_sitter_languages import get_language, get_parser
-
+from pylibtreesitter import nodes_by_type_suffix
 from .tree_sitter_identifier_queries import LANG_TO_TREE_SITTER_QUERY
 
 """
@@ -261,7 +261,11 @@ def find_parent_definition(node):
         node = node.parent
         if node.type.endswith('_definition'):
             if node.type == 'decorated_definition':
-                node = node.named_children[0].next_named_sibling
+                node = nodes_by_type_suffix(node.named_children, '_definition')
+                if node:
+                    if len(node) > 1:
+                        raise ValueError(f'{len(node)} parent definitions found: {node}')
+                    return node[0]
             return node
     return None
 
@@ -281,9 +285,11 @@ def capture2identifier_boundaries(captures, lines: Sequence[str]) -> list[Identi
     for capture in captures:
         unique_captures[f'{capture.range[0]}:{capture.capture_type}'] = capture
     # unique_captures={
-    # '157:function.decorator': CaptureInfo(capture_type='function.decorator', node=<Node type=decorator, start_point=(157, 4), end_point=(157, 17)>),
-    # '158:function.definition': CaptureInfo(capture_type='function.definition', node=<Node type=function_definition, start_point=(158, 4), end_point=(207, 19)>),
-    # '159:function.body': CaptureInfo(capture_type='function.body', node=<Node type=block, start_point=(159, 8), end_point=(207, 19)>)
+    # '14:function.definition': CaptureInfo(capture_type='function.definition', node=<Node type=function_definition, start_point=(14, 4), end_point=(22, 19)>),
+    # '12:function.decorator': CaptureInfo(capture_type='function.decorator', node=<Node type=decorator, start_point=(12, 4), end_point=(12, 17)>),
+    # '13:function.decorator': CaptureInfo(capture_type='function.decorator', node=<Node type=decorator, start_point=(13, 4), end_point=(13, 28)>),
+    # '15:function.body': CaptureInfo(capture_type='function.body', node=<Node type=block, start_point=(15, 8), end_point=(22, 19)>),
+    # '15:function.docstring': CaptureInfo(capture_type='function.docstring', node=<Node type=string, start_point=(15, 8), end_point=(15, 42)>)
     # }
     return associate_identifier_parts(sort_captures(unique_captures), lines)
 
