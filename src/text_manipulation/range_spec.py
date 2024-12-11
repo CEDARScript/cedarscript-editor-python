@@ -366,7 +366,7 @@ class IdentifierBoundaries:
     @property
     def body_start_line(self) -> int:
         """Return the 1-indexed start line of the identifier's body."""
-        return self.body.start + 1
+        return self.body.start + 1 if self.body else None
 
     @property
     def end_line(self) -> int:

@@ -36,8 +36,7 @@ _common_template = """
         .
         (expression_statement
             (string) @{type}.docstring)?
-        .
-    ) @{type}.body
+     ) @{type}.body
 """
 
 _definition_base_template = """
@@ -62,29 +61,6 @@ LANG_TO_TREE_SITTER_QUERY = {
         {definition_base}
         {common_body}
     ) @function.definition
-)
-
-; Methods in Classes
-(class_definition
-    body: (block
-        (function_definition
-            {definition_base}
-            {common_body}
-        ) @function.definition
-    )
-)
-
-; Decorated Methods in Classes
-(class_definition
-    body: (block
-        (decorated_definition
-            (decorator)+ @function.decorator
-            (function_definition
-                {definition_base}
-                {common_body}
-            ) @function.definition
-        )
-    )
 )
 """.format(
             definition_base=_definition_base_template.format(type="function"),
