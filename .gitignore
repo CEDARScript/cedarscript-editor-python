@@ -1,0 +1,8 @@
+/src/version/_version.py
+src/*.egg-info
+dist
+build
+out
+.coverage
+.*.history*
+*.tags.cache*

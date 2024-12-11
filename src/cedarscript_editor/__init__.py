@@ -1,4 +1,4 @@
-from ._version import __version__
+from version import __version__
 import re
 from .cedarscript_editor import CEDARScriptEditor
 from cedarscript_ast_parser import CEDARScriptASTParser
