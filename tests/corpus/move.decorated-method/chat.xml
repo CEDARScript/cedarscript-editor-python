@@ -1,0 +1,20 @@
+<no-train>
+```CEDARScript
+-- 1. Move the `get_fault_text` method from the `SpyderKernel` class to be a top-level function
+UPDATE METHOD "SpyderKernel.get_fault_text"
+FROM FILE "1.py"
+MOVE WHOLE
+INSERT BEFORE CLASS "SpyderKernel"
+RELATIVE INDENTATION 0;
+
+-- 2. Update the copied function to remove references to `self`
+UPDATE FUNCTION "get_fault_text"
+FROM FILE r"1.py"
+REPLACE WHOLE WITH CASE
+WHEN REGEX r'''def get_fault_text\(''' THEN SUB
+r'''def get_fault_text\(self, fault_filename, main_id, ignore_ids\):'''
+r'''def get_fault_text(fault_filename, main_id, ignore_ids):'''
+END;
+
+```
+</no-train>

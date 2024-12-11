@@ -1,5 +1,6 @@
 import re
 import shutil
+import sys
 import tempfile
 import pytest
 from pathlib import Path
@@ -40,6 +41,10 @@ def editor(tmp_path_factory):
 @pytest.mark.parametrize('test_case', get_test_cases())
 def test_corpus(editor: CEDARScriptEditor, test_case: str):
     """Test CEDARScript commands from chat.xml files in corpus."""
+    if test_case.casefold().endswith('!nowindows'):
+        if sys.platform == 'win32':
+            pytest.skip(f"Cannot run under Windows: {test_case.removesuffix('!nowindows')}")
+
     try:
         corpus_dir = Path(__file__).parent / 'corpus'
         test_dir = corpus_dir / test_case
@@ -93,7 +98,7 @@ def test_corpus(editor: CEDARScriptEditor, test_case: str):
                 if str(rel_path).startswith("."):
                     continue
                 expected_file = test_dir / f"expected.{rel_path}"
-                assert expected_file.exists(), f"'expecteed.*' file not found: {expected_file}"
+                assert expected_file.exists(), f"'expected.*' file not found: {expected_file}"
 
                 expected_content = file_to_lines(expected_file, rel_path)
                 actual_content = file_to_lines(path, rel_path)
