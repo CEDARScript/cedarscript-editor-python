@@ -1,0 +1,845 @@
+LANG_TO_TREE_SITTER_QUERY = {
+    "php": {
+        'function': """
+    ; Regular function definitions with optional attributes and docstring
+    (function_definition
+      (attribute_list)? @function.decorator
+      name: (name) @function.name
+      body: (compound_statement) @function.body) @function.definition
+
+    (function_definition
+      (attribute_list)? @function.decorator
+      (comment) @function.docstring
+      name: (name) @function.name
+      body: (compound_statement) @function.body) @function.definition
+
+    ; Method definitions in classes with optional attributes and docstring
+    (method_declaration
+      (attribute_list)? @function.decorator
+      name: (name) @function.name
+      body: (compound_statement) @function.body) @function.definition
+
+    (method_declaration
+      (attribute_list)? @function.decorator
+      (comment) @function.docstring
+      name: (name) @function.name
+      body: (compound_statement) @function.body) @function.definition
+
+    ; Anonymous functions
+    (anonymous_function
+      (attribute_list)? @function.decorator
+      body: (compound_statement) @function.body) @function.definition
+
+    ; Arrow functions
+    (arrow_function
+      (attribute_list)? @function.decorator
+      body: (expression) @function.body) @function.definition
+    """,
+
+        'class': ("class.definition", "class.name", "class.body", "class.docstring", "class.decorator", """
+    ; Regular class definitions with optional attributes and docstring
+    (class_declaration
+      (attribute_list)? @class.decorator
+      name: (name) @class.name
+      body: (declaration_list) @class.body) @class.definition
+
+    (class_declaration
+      (attribute_list)? @class.decorator
+      (comment) @class.docstring
+      name: (name) @class.name
+      body: (declaration_list) @class.body) @class.definition
+
+    ; Interface definitions
+    (interface_declaration
+      (attribute_list)? @class.decorator
+      name: (name) @class.name
+      body: (declaration_list) @class.body) @class.definition
+
+    (interface_declaration
+      (attribute_list)? @class.decorator
+      (comment) @class.docstring
+      name: (name) @class.name
+      body: (declaration_list) @class.body) @class.definition
+
+    ; Trait definitions
+    (trait_declaration
+      (attribute_list)? @class.decorator
+      name: (name) @class.name
+      body: (declaration_list) @class.body) @class.definition
+
+    (trait_declaration
+      (attribute_list)? @class.decorator
+      (comment) @class.docstring
+      name: (name) @class.name
+      body: (declaration_list) @class.body) @class.definition
+
+    ; Enum definitions
+    (enum_declaration
+      (attribute_list)? @class.decorator
+      name: (name) @class.name
+      body: (enum_declaration_list) @class.body) @class.definition
+
+    (enum_declaration
+      (attribute_list)? @class.decorator
+      (comment) @class.docstring
+      name: (name) @class.name
+      body: (enum_declaration_list) @class.body) @class.definition
+    """)
+    },
+
+    "rust": {
+        'function': """
+    ; Function definitions with optional attributes, visibility, and docstring
+    (function_item
+      (attribute_item)? @function.decorator
+      (visibility_modifier)?
+      (function_modifiers)?
+      "fn"
+      name: (identifier) @function.name
+      parameters: (parameters)
+      return_type: (_)?
+      body: (block) @function.body) @function.definition
+
+    (function_item
+      (attribute_item)? @function.decorator
+      (visibility_modifier)?
+      (function_modifiers)?
+      (line_comment)+ @function.docstring
+      "fn"
+      name: (identifier) @function.name
+      parameters: (parameters)
+      return_type: (_)?
+      body: (block) @function.body) @function.definition
+
+    ; Method definitions in impl blocks
+    (impl_item
+      (attribute_item)? @function.decorator
+      (visibility_modifier)?
+      (function_modifiers)?
+      "fn"
+      name: (identifier) @function.name
+      parameters: (parameters)
+      return_type: (_)?
+      body: (block) @function.body) @function.definition
+
+    (impl_item
+      (attribute_item)? @function.decorator
+      (visibility_modifier)?
+      (function_modifiers)?
+      (line_comment)+ @function.docstring
+      "fn"
+      name: (identifier) @function.name
+      parameters: (parameters)
+      return_type: (_)?
+      body: (block) @function.body) @function.definition
+
+    ; Async function definitions
+    (function_item
+      (attribute_item)? @function.decorator
+      (visibility_modifier)?
+      "async"
+      "fn"
+      name: (identifier) @function.name
+      parameters: (parameters)
+      return_type: (_)?
+      body: (block) @function.body) @function.definition
+
+    ; Const function definitions
+    (function_item
+      (attribute_item)? @function.decorator
+      (visibility_modifier)?
+      "const"
+      "fn"
+      name: (identifier) @function.name
+      parameters: (parameters)
+      return_type: (_)?
+      body: (block) @function.body) @function.definition
+    """,
+
+        'class': ("class.definition", "class.name", "class.body", "class.docstring", "class.decorator", """
+    ; Struct definitions with optional attributes, visibility, and docstring
+    (struct_item
+      (attribute_item)? @class.decorator
+      (visibility_modifier)?
+      "struct"
+      name: (type_identifier) @class.name
+      body: (field_declaration_list)? @class.body) @class.definition
+
+    (struct_item
+      (attribute_item)? @class.decorator
+      (visibility_modifier)?
+      (line_comment)+ @class.docstring
+      "struct"
+      name: (type_identifier) @class.name
+      body: (field_declaration_list)? @class.body) @class.definition
+
+    ; Enum definitions
+    (enum_item
+      (attribute_item)? @class.decorator
+      (visibility_modifier)?
+      "enum"
+      name: (type_identifier) @class.name
+      body: (enum_variant_list) @class.body) @class.definition
+
+    (enum_item
+      (attribute_item)? @class.decorator
+      (visibility_modifier)?
+      (line_comment)+ @class.docstring
+      "enum"
+      name: (type_identifier) @class.name
+      body: (enum_variant_list) @class.body) @class.definition
+
+    ; Trait definitions
+    (trait_item
+      (attribute_item)? @class.decorator
+      (visibility_modifier)?
+      "trait"
+      name: (type_identifier) @class.name
+      body: (declaration_list) @class.body) @class.definition
+
+    (trait_item
+      (attribute_item)? @class.decorator
+      (visibility_modifier)?
+      (line_comment)+ @class.docstring
+      "trait"
+      name: (type_identifier) @class.name
+      body: (declaration_list) @class.body) @class.definition
+
+    ; Union definitions
+    (union_item
+      (attribute_item)? @class.decorator
+      (visibility_modifier)?
+      "union"
+      name: (type_identifier) @class.name
+      body: (field_declaration_list) @class.body) @class.definition
+
+    (union_item
+      (attribute_item)? @class.decorator
+      (visibility_modifier)?
+      (line_comment)+ @class.docstring
+      "union"
+      name: (type_identifier) @class.name
+      body: (field_declaration_list) @class.body) @class.definition
+    """)
+    },
+
+    "go": {
+        'function': """
+    ; Function declarations with optional docstring
+    (function_declaration
+      (comment)* @function.docstring
+      name: (identifier) @function.name
+      body: (block) @function.body) @function.definition
+
+    ; Method declarations with optional docstring
+    (method_declaration
+      (comment)* @function.docstring
+      name: (field_identifier) @function.name
+      body: (block) @function.body) @function.definition
+    """,
+
+        'class': ("class.definition", "class.name", "class.body", "class.docstring", "class.decorator", """
+    ; Struct type definitions with optional docstring
+    (type_declaration
+      (type_spec
+        name: (type_identifier) @class.name
+        type: (struct_type
+          (field_declaration_list) @class.body))) @class.definition
+
+    (type_declaration
+      (comment)* @class.docstring
+      (type_spec
+        name: (type_identifier) @class.name
+        type: (struct_type
+          (field_declaration_list) @class.body))) @class.definition
+
+    ; Interface type definitions with optional docstring
+    (type_declaration
+      (type_spec
+        name: (type_identifier) @class.name
+        type: (interface_type
+          (method_spec_list) @class.body))) @class.definition
+
+    (type_declaration
+      (comment)* @class.docstring
+      (type_spec
+        name: (type_identifier) @class.name
+        type: (interface_type
+          (method_spec_list) @class.body))) @class.definition
+    """)
+    },
+
+    "cpp": {
+        'function': """
+    ; Function definitions
+    (function_definition
+      declarator: (function_declarator
+        declarator: (identifier) @function.name)
+      body: (compound_statement) @function.body) @function.definition
+
+    ; Method definitions
+    (function_definition
+      declarator: (function_declarator
+        declarator: (field_identifier) @function.name)
+      body: (compound_statement) @function.body) @function.definition
+
+    ; Constructor definitions
+    (constructor_or_destructor_definition
+      declarator: (function_declarator
+        declarator: (qualified_identifier
+          name: (identifier) @function.name))
+      body: (compound_statement) @function.body) @function.definition
+
+    ; Destructor definitions
+    (constructor_or_destructor_definition
+      declarator: (function_declarator
+        declarator: (destructor_name
+          (identifier) @function.name))
+      body: (compound_statement) @function.body) @function.definition
+
+    ; Operator overloading definitions
+    (function_definition
+      declarator: (function_declarator
+        declarator: (operator_name) @function.name)
+      body: (compound_statement) @function.body) @function.definition
+
+    ; Lambda expressions
+    (lambda_expression
+      body: (compound_statement) @function.body) @function.definition
+    """,
+
+        'class': ("class.definition", "class.name", "class.body", "class.docstring", "class.decorator", """
+    ; Class definitions
+    (class_specifier
+      name: (type_identifier) @class.name
+      body: (field_declaration_list) @class.body) @class.definition
+
+    ; Struct definitions
+    (struct_specifier
+      name: (type_identifier) @class.name
+      body: (field_declaration_list) @class.body) @class.definition
+
+    ; Union definitions
+    (union_specifier
+      name: (type_identifier) @class.name
+      body: (field_declaration_list) @class.body) @class.definition
+
+    ; Enum definitions
+    (enum_specifier
+      name: (type_identifier) @class.name
+      body: (enumerator_list) @class.body) @class.definition
+
+    ; Template class definitions
+    (template_declaration
+      (class_specifier
+        name: (type_identifier) @class.name
+        body: (field_declaration_list) @class.body)) @class.definition
+
+    ; Template struct definitions
+    (template_declaration
+      (struct_specifier
+        name: (type_identifier) @class.name
+        body: (field_declaration_list) @class.body)) @class.definition
+    """)
+    },
+
+    "c": {
+        'function': """
+    ; Function definitions
+    (function_definition
+      declarator: (function_declarator
+        declarator: (identifier) @function.name)
+      body: (compound_statement) @function.body) @function.definition
+
+    ; Function definitions with type qualifiers
+    (function_definition
+      type: (type_qualifier)
+      declarator: (function_declarator
+        declarator: (identifier) @function.name)
+      body: (compound_statement) @function.body) @function.definition
+
+    ; Function declarations (prototypes)
+    (declaration
+      declarator: (function_declarator
+        declarator: (identifier) @function.name)) @function.definition
+    """,
+
+        'class': ("class.definition", "class.name", "class.body", "class.docstring", "class.decorator", """
+    ; Struct definitions
+    (struct_specifier
+      name: (type_identifier) @class.name
+      body: (field_declaration_list) @class.body) @class.definition
+
+    ; Union definitions
+    (union_specifier
+      name: (type_identifier) @class.name
+      body: (field_declaration_list) @class.body) @class.definition
+
+    ; Enum definitions
+    (enum_specifier
+      name: (type_identifier) @class.name
+      body: (enumerator_list) @class.body) @class.definition
+
+    ; Typedef struct definitions
+    (declaration
+      (type_qualifier)*
+      "typedef"
+      (type_qualifier)*
+      (struct_specifier
+        name: (type_identifier) @class.name
+        body: (field_declaration_list) @class.body)
+      (type_identifier)) @class.definition
+
+    ; Typedef union definitions
+    (declaration
+      (type_qualifier)*
+      "typedef"
+      (type_qualifier)*
+      (union_specifier
+        name: (type_identifier) @class.name
+        body: (field_declaration_list) @class.body)
+      (type_identifier)) @class.definition
+
+    ; Typedef enum definitions
+    (declaration
+      (type_qualifier)*
+      "typedef"
+      (type_qualifier)*
+      (enum_specifier
+        name: (type_identifier) @class.name
+        body: (enumerator_list) @class.body)
+      (type_identifier)) @class.definition
+    """)
+    },
+
+    "java": {
+        'function': """
+    ; Method declarations
+    (method_declaration
+      (modifiers)? @function.decorator
+      (_method_header
+        name: (identifier) @function.name)
+      body: (block) @function.body) @function.definition
+
+    ; Compact constructor declarations (for records)
+    (compact_constructor_declaration
+      (modifiers)? @function.decorator
+      name: (identifier) @function.name
+      body: (block) @function.body) @function.definition
+
+    ; Constructor declarations
+    (constructor_declaration
+      (modifiers)? @function.decorator
+      (_constructor_declarator
+        name: (identifier) @function.name)
+      body: (constructor_body) @function.body) @function.definition
+    """,
+
+        'class': ("class.definition", "class.name", "class.body", "class.docstring", "class.decorator", """
+    ; Class declarations
+    (class_declaration
+      (modifiers)? @class.decorator
+      "class"
+      name: (identifier) @class.name
+      body: (class_body) @class.body) @class.definition
+
+    ; Interface declarations
+    (interface_declaration
+      (modifiers)? @class.decorator
+      "interface"
+      name: (identifier) @class.name
+      body: (interface_body) @class.body) @class.definition
+
+    ; Enum declarations
+    (enum_declaration
+      (modifiers)? @class.decorator
+      "enum"
+      name: (identifier) @class.name
+      body: (enum_body) @class.body) @class.definition
+
+    ; Record declarations
+    (record_declaration
+      (modifiers)? @class.decorator
+      "record"
+      name: (identifier) @class.name
+      body: (class_body) @class.body) @class.definition
+
+    ; Annotation type declarations
+    (annotation_type_declaration
+      (modifiers)? @class.decorator
+      "@interface"
+      name: (identifier) @class.name
+      body: (annotation_type_body) @class.body) @class.definition
+    """)
+    },
+
+    "javascript": {
+        'function': """
+    ; Function declarations
+    (function_declaration
+      name: (identifier) @function.name
+      body: (statement_block) @function.body) @function.definition
+
+    ; Function expressions
+    (function_expression
+      name: (identifier)? @function.name
+      body: (statement_block) @function.body) @function.definition
+
+    ; Arrow functions
+    (arrow_function
+      body: [(expression) (statement_block)] @function.body) @function.definition
+
+    ; Method definitions
+    (method_definition
+      name: [(property_identifier) (private_property_identifier)] @function.name
+      body: (statement_block) @function.body) @function.definition
+
+    ; Generator functions
+    (generator_function_declaration
+      name: (identifier) @function.name
+      body: (statement_block) @function.body) @function.definition
+
+    (generator_function
+      name: (identifier)? @function.name
+      body: (statement_block) @function.body) @function.definition
+
+    ; Async functions
+    (function_declaration
+      "async"
+      name: (identifier) @function.name
+      body: (statement_block) @function.body) @function.definition
+
+    (function_expression
+      "async"
+      name: (identifier)? @function.name
+      body: (statement_block) @function.body) @function.definition
+
+    (arrow_function
+      "async"
+      body: [(expression) (statement_block)] @function.body) @function.definition
+
+    ; Decorators for class methods
+    (method_definition
+      decorator: (decorator)+ @function.decorator
+      name: [(property_identifier) (private_property_identifier)] @function.name
+      body: (statement_block) @function.body) @function.definition
+    """,
+
+        'class': ("class.definition", "class.name", "class.body", "class.docstring", "class.decorator", """
+    ; Class declarations
+    (class_declaration
+      name: (identifier) @class.name
+      body: (class_body) @class.body) @class.definition
+
+    ; Class expressions
+    (class
+      name: (identifier)? @class.name
+      body: (class_body) @class.body) @class.definition
+
+    ; Decorators for classes
+    (class_declaration
+      decorator: (decorator)+ @class.decorator
+      name: (identifier) @class.name
+      body: (class_body) @class.body) @class.definition
+
+    (class
+      decorator: (decorator)+ @class.decorator
+      name: (identifier)? @class.name
+      body: (class_body) @class.body) @class.definition
+    """)
+    },
+
+    "lua": {
+        'function': """
+    ; Function definitions
+    (function_definition
+      "function"
+      (parameter_list) @function.parameters
+      (block) @function.body) @function.definition
+
+    ; Local function definitions
+    (local_function_definition_statement
+      "local" "function"
+      (identifier) @function.name
+      (parameter_list) @function.parameters
+      (block) @function.body) @function.definition
+
+    ; Function definition statements
+    (function_definition_statement
+      "function"
+      (identifier) @function.name
+      (parameter_list) @function.parameters
+      (block) @function.body) @function.definition
+
+    ; Function definition statements with table methods
+    (function_definition_statement
+      "function"
+      ((identifier) @function.name
+       ":" (identifier) @function.method)
+      (parameter_list) @function.parameters
+      (block) @function.body) @function.definition
+    """,
+
+        'class': ("class.definition", "class.name", "class.body", "class.docstring", "class.decorator", """
+    ; Lua doesn't have built-in classes, but tables are often used to simulate them
+    ; We'll capture table definitions that might represent "classes"
+    (variable_assignment
+      (variable_list
+        (variable) @class.name)
+      "="
+      (expression_list
+        (table) @class.body)) @class.definition
+    """)
+    },
+
+    "fortran": {
+        'function': """
+    (function
+      (function_statement
+        name: (identifier) @function.name)
+      body: (_) @function.body) @function.definition
+    """,
+
+        'class': ("class.definition", "class.name", "class.body", "class.docstring", "class.decorator", """
+    (derived_type_definition
+      (derived_type_statement
+        name: (_type_name) @class.name)
+      body: (_) @class.body) @class.definition
+    """)
+    },
+
+    "scala": {
+        'function': """
+    (function_definition
+      (annotation)* @function.decorator
+      (modifiers)? @function.decorator
+      "def"
+      name: (_identifier) @function.name
+      type_parameters: (type_parameters)?
+      parameters: (parameters)*
+      return_type: ((_type) @function.return_type)?
+      body: [
+        (indented_block) @function.body
+        (block) @function.body
+        (expression) @function.body
+      ]?) @function.definition
+
+    (function_declaration
+      (annotation)* @function.decorator
+      (modifiers)? @function.decorator
+      "def"
+      name: (_identifier) @function.name
+      type_parameters: (type_parameters)?
+      parameters: (parameters)*
+      return_type: ((_type) @function.return_type)?) @function.definition
+    """,
+
+        'class': ("class.definition", "class.name", "class.body", "class.docstring", "class.decorator", """
+    (class_definition
+      (annotation)* @class.decorator
+      (modifiers)? @class.decorator
+      "class"
+      name: (_identifier) @class.name
+      type_parameters: (type_parameters)?
+      parameters: (class_parameters)*
+      (extends_clause)?
+      (derives_clause)?
+      body: (template_body)?) @class.definition
+
+    (object_definition
+      (annotation)* @class.decorator
+      (modifiers)? @class.decorator
+      "object"
+      name: (_identifier) @class.name
+      (extends_clause)?
+      (derives_clause)?
+      body: (template_body)?) @class.definition
+
+    (trait_definition
+      (annotation)* @class.decorator
+      (modifiers)? @class.decorator
+      "trait"
+      name: (_identifier) @class.name
+      type_parameters: (type_parameters)?
+      parameters: (class_parameters)*
+      (extends_clause)?
+      (derives_clause)?
+      body: (template_body)?) @class.definition
+
+    (enum_definition
+      (annotation)* @class.decorator
+      "enum"
+      name: (_identifier) @class.name
+      type_parameters: (type_parameters)?
+      parameters: (class_parameters)*
+      (extends_clause)?
+      (derives_clause)?
+      body: (enum_body)) @class.definition
+    """)
+    },
+
+    "c_sharp": {
+        'function': """
+    ; Method declarations
+    (method_declaration
+      (attribute_list)? @function.decorator
+      (modifier)* @function.decorator
+      type: (_)
+      name: (identifier) @function.name
+      parameters: (parameter_list)
+      body: (block) @function.body) @function.definition
+
+    ; Constructor declarations
+    (constructor_declaration
+      (attribute_list)? @function.decorator
+      (modifier)* @function.decorator
+      name: (identifier) @function.name
+      parameters: (parameter_list)
+      body: (block) @function.body) @function.definition
+
+    ; Destructor declarations
+    (destructor_declaration
+      (attribute_list)? @function.decorator
+      "extern"? @function.decorator
+      "~"
+      name: (identifier) @function.name
+      parameters: (parameter_list)
+      body: (block) @function.body) @function.definition
+
+    ; Operator declarations
+    (operator_declaration
+      (attribute_list)? @function.decorator
+      (modifier)* @function.decorator
+      type: (_)
+      "operator"
+      operator: (_)
+      parameters: (parameter_list)
+      body: (block) @function.body) @function.definition
+
+    ; Conversion operator declarations
+    (conversion_operator_declaration
+      (attribute_list)? @function.decorator
+      (modifier)* @function.decorator
+      ("implicit" | "explicit")
+      "operator"
+      type: (_)
+      parameters: (parameter_list)
+      body: (block) @function.body) @function.definition
+
+    ; Local function statements
+    (local_function_statement
+      (attribute_list)? @function.decorator
+      (modifier)* @function.decorator
+      type: (_)
+      name: (identifier) @function.name
+      parameters: (parameter_list)
+      body: (block) @function.body) @function.definition
+    """,
+
+        'class': ("class.definition", "class.name", "class.body", "class.docstring", "class.decorator", """
+    ; Class declarations
+    (class_declaration
+      (attribute_list)? @class.decorator
+      (modifier)* @class.decorator
+      "class"
+      name: (identifier) @class.name
+      body: (declaration_list) @class.body) @class.definition
+
+    ; Struct declarations
+    (struct_declaration
+      (attribute_list)? @class.decorator
+      (modifier)* @class.decorator
+      "struct"
+      name: (identifier) @class.name
+      body: (declaration_list) @class.body) @class.definition
+
+    ; Interface declarations
+    (interface_declaration
+      (attribute_list)? @class.decorator
+      (modifier)* @class.decorator
+      "interface"
+      name: (identifier) @class.name
+      body: (declaration_list) @class.body) @class.definition
+
+    ; Enum declarations
+    (enum_declaration
+      (attribute_list)? @class.decorator
+      (modifier)* @class.decorator
+      "enum"
+      name: (identifier) @class.name
+      body: (enum_member_declaration_list) @class.body) @class.definition
+
+    ; Record declarations
+    (record_declaration
+      (attribute_list)? @class.decorator
+      (modifier)* @class.decorator
+      "record"
+      name: (identifier) @class.name
+      body: (declaration_list) @class.body) @class.definition
+    """)
+    },
+
+    "cobol": {
+        'function': """
+    (function_definition
+      (function_division
+        name: (program_name) @function.name)
+      (environment_division)?
+      (data_division)?
+      (procedure_division) @function.body) @function.definition
+    """,
+
+        'class': ("class.definition", "class.name", "class.body", "class.docstring", "class.decorator", """
+    (data_division
+      (file_section
+        (file_description
+          name: (WORD) @class.name
+          (record_description_list) @class.body))) @class.definition
+
+    (data_division
+      (working_storage_section
+        (data_description
+          level_number: (level_number)
+          name: (entry_name) @class.name
+          (repeat ($._data_description_clause))* @class.body))) @class.definition
+    """)
+    },
+
+    "matlab": {
+        'function': """
+    (function_definition
+      (function_output)?
+      name: (identifier) @function.name
+      (function_arguments)?
+      (_end_of_line)
+      (arguments_statement)*
+      body: (block)? @function.body) @function.definition
+
+    (function_definition
+      (function_output)?
+      "get." @function.decorator
+      name: (identifier) @function.name
+      (function_arguments)?
+      (_end_of_line)
+      (arguments_statement)*
+      body: (block)? @function.body) @function.definition
+
+    (function_definition
+      (function_output)?
+      "set." @function.decorator
+      name: (identifier) @function.name
+      (function_arguments)?
+      (_end_of_line)
+      (arguments_statement)*
+      body: (block)? @function.body) @function.definition
+    """,
+
+        'class': ("class.definition", "class.name", "class.body", "class.docstring", "class.decorator", """
+    (class_definition
+      (attributes)? @class.decorator
+      name: (identifier) @class.name
+      (superclasses)?
+      (_end_of_line)
+      body: (_ (properties | methods | events | enumeration | ";")*)+ @class.body) @class.definition
+    """)
+    }

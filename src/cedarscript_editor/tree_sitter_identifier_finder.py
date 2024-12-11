@@ -10,7 +10,7 @@ from text_manipulation.range_spec import IdentifierBoundaries, RangeSpec, Parent
 from text_manipulation import IdentifierFinder
 from tree_sitter_languages import get_language, get_parser
 from pylibtreesitter import nodes_by_type_suffix
-from .tree_sitter_identifier_queries import LANG_TO_TREE_SITTER_QUERY
+from .tree_sitter_identifier_queries import get_query
 
 """
 Parser for extracting identifier information from source code using tree-sitter.
@@ -48,7 +48,7 @@ class TreeSitterIdentifierFinder(IdentifierFinder):
             self.query_info = None
             _log.info(f"[TreeSitterIdentifierFinder] NO LANGUAGE for `{fname}`")
             return
-        self.query_info: dict[str, dict[str, str]] = LANG_TO_TREE_SITTER_QUERY[langstr]
+        self.query_info: dict[str, str] = get_query(langstr)
         self.language = get_language(langstr)
         _log.info(f"[TreeSitterIdentifierFinder] Selected {self.language}")
         self.tree = get_parser(langstr).parse(bytes(source, "utf-8"))
