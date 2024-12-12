@@ -11,14 +11,14 @@ Here's my plan to implement the requested changes:
 Here's the CEDARScript script:
 
 ```CEDARScript
--- 1. Move the `_candidate()` method from the `A` class, placing it at the top level, just before the line where its class starts
+# 1. Move the `_candidate()` method from the `A` class, placing it at the top level, just before the line where its class starts
 UPDATE CLASS "A"
 FROM FILE "main.py"
 MOVE FUNCTION "_candidate"
 INSERT BEFORE CLASS "A"
 RELATIVE INDENTATION 0;
 
--- 2. Update the copied function to remove references to `self`
+# 2. Update the copied function to remove references to `self`
 UPDATE FUNCTION "_candidate"
 FROM FILE "main.py"
 REPLACE LINE "def _candidate(self, a, b, c):"
@@ -26,7 +26,7 @@ WITH CONTENT '''
 @0:def _candidate(a, b, c):
 ''';
 
--- 3. Update ALL call sites of the method `_candidate()` to call the new top-level function with the same name
+# 3. Update ALL call sites of the method `_candidate()` to call the new top-level function with the same name
 UPDATE FUNCTION "_check"
 FROM FILE "main.py"
 REPLACE LINE "self._candidate("

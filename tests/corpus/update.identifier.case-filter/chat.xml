@@ -20,7 +20,7 @@ REPLACE WHOLE WITH CASE
     r'\1'
 END;
 
--- Update the copied function to remove references to `self`
+# Update the copied function to remove references to `self`
 UPDATE FUNCTION "_make_source_table"
   FROM FILE "analyzer_cli.py"
 REPLACE WHOLE WITH CASE
@@ -29,7 +29,7 @@ REPLACE WHOLE WITH CASE
     r'''\1'''
   END;
 
--- Update ALL call sites of the method `_make_source_table` to call the new top-level function with the same name
+# Update ALL call sites of the method `_make_source_table` to call the new top-level function with the same name
 UPDATE METHOD "DebugAnalyzer.list_source"
   FROM FILE "analyzer_cli.py"
 REPLACE BODY WITH CASE

@@ -1,6 +1,6 @@
 <no-train>
 ```CEDARScript
--- A02 becomes local to b
+# A02 becomes local to b
 UPDATE FUNCTION "b" FROM FILE "main.py"
 MOVE WHOLE
 INSERT BEFORE CLASS "A02"
