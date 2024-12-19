@@ -3,7 +3,7 @@
 [![PyPI version](https://badge.fury.io/py/cedarscript-editor.svg)](https://pypi.org/project/cedarscript-editor/)
 [![Python Versions](https://img.shields.io/pypi/pyversions/cedarscript-editor.svg)](https://pypi.org/project/cedarscript-editor/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 `CEDARScript Editor (Python)` is a [CEDARScript](https://bit.ly/cedarscript) runtime
 for interpreting `CEDARScript` scripts and performing code analysis and modification operations on a codebase.

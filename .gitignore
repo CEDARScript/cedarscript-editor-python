@@ -1,8 +1,11 @@
 /src/version/_version.py
 src/*.egg-info
+__pycache__
 dist
 build
 out
+.venv
+.env
 .coverage
 .*.history*
 *.tags.cache*
