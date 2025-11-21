@@ -29,6 +29,7 @@ dependencies = [
     # https://github.com/grantjenks/py-tree-sitter-languages/issues/64
     "tree-sitter==0.21.3", # 0.22 breaks tree-sitter-languages
     "tree-sitter-languages==1.10.2",
+    "click>=8.0.0",
 ]
 requires-python = ">=3.11"
 
@@ -37,6 +38,9 @@ Homepage = "https://github.com/CEDARScript/cedarscript-editor-python"
 Documentation = "https://github.com/CEDARScript/cedarscript-editor-python#readme"
 Repository = "https://github.com/CEDARScript/cedarscript-editor-python.git"
 "Bug Tracker" = "https://github.com/CEDARScript/cedarscript-editor-python/issues"
+
+[project.scripts]
+cedarscript = "cedarscript_editor.cli:main"
 
 [project.optional-dependencies]
 dev = [

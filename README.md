@@ -42,30 +42,141 @@ pip install cedarscript-editor
 
 ## Usage
 
-Here's a quick example of how to use `CEDARScript` Editor:
+### Python Library
+
+Here's a quick example of how to use `CEDARScript` Editor as a Python library:
 
 ```python
-from cedarscript_editor import CEDARScriptEdior
+from cedarscript_editor import CEDARScriptEditor
 
-parser = CEDARScriptEdior()
-code = """
-CREATE FILE "example.py"
-UPDATE FILE "example.py"
-    INSERT AT END OF FILE
-        CONTENT
-            print("Hello, World!")
-        END CONTENT
-END UPDATE
+editor = CEDARScriptEditor("/path/to/project")
+
+# Parse and execute CEDARScript commands
+cedarscript = """```CEDARScript
+CREATE FILE "example.py" WITH
 """
+print("Hello, World!")
+"""
+```"""
 
-commands, errors = parser.parse_script(code)
+# Apply commands to the codebase
+results = editor.apply_cedarscript(cedarscript)
+print(results)
+```
 
-if errors:
-    for error in errors:
-        print(f"Error: {error}")
-else:
-    for command in commands:
-        print(f"Parsed command: {command}")
+### Command Line Interface
+
+`cedarscript-editor` also provides a CLI for executing CEDARScript commands directly from the command line.
+
+#### Installation
+
+After installing via pip, the `cedarscript` command will be available:
+
+```bash
+pip install cedarscript-editor
+```
+
+#### Basic Usage
+
+```bash
+# Execute CEDARScript directly
+cedarscript 'CREATE FILE "example.py" WITH "print(\"Hello World\")"'
+
+# Read CEDARScript from file
+cedarscript -f commands.cedar
+cedarscript --file commands.cedar
+
+# Read from STDIN
+cat commands.cedar | cedarscript
+echo 'UPDATE FILE "test.py" INSERT LINE 1 "import os"' | cedarscript
+
+# Specify base directory
+cedarscript --root /path/to/project -f commands.cedar
+
+# Quiet mode for scripting
+cedarscript --quiet -f commands.cedar
+
+# Syntax check only
+cedarscript --check -f commands.cedar
+```
+
+#### CLI Options
+
+- `-f, --file FILENAME`: Read CEDARScript commands from file
+- `--root DIRECTORY`: Base directory for file operations (default: current directory)
+- `-q, --quiet`: Minimal output (for scripting)
+- `--check`: Syntax check only - parse commands without executing
+- `COMMAND`: Direct CEDARScript command (alternative to file input)
+
+#### CEDARScript File Format
+
+CEDARScript commands must be enclosed in fenced code blocks:
+
+````markdown
+```CEDARScript
+CREATE FILE "example.py" WITH
+"""
+print("Hello, World!")
+"""
+```
+````
+
+Or use the `<NOCEDARSCRIPT/>` tag for direct command execution:
+
+```cedarscript
+<NOCEDARSCRIPT/>
+CREATE FILE "example.py" WITH
+"""
+print("Hello, World!")
+"""
+```
+
+#### Examples
+
+**Create a new file:**
+```bash
+cedarscript '```CEDARScript
+CREATE FILE "utils.py" WITH
+"""
+def hello():
+    print("Hello from utils!")
+"""
+```'
+```
+
+**Update an existing file:**
+```bash
+cat > update_commands.cedar << 'EOF'
+```CEDARScript
+UPDATE FILE "app.py"
+INSERT LINE 1
+    """Application module"""
+INSERT AFTER "import os"
+    import sys
+```'
+EOF
+
+cedarscript -f update_commands.cedar
+```
+
+**Multi-file operations:**
+```bash
+cat > refactor.cedar << 'EOF'
+```CEDARScript
+# Move method to top level
+UPDATE CLASS "DataProcessor"
+FROM FILE "data.py"
+MOVE METHOD "process"
+
+# Update call sites
+UPDATE FUNCTION "main"
+FROM FILE "main.py"
+REPLACE LINE 5
+    result = process(data)
+```'
+EOF
+
+cedarscript --root ./my-project -f refactor.cedar
 ```
 
 ## Contributing
