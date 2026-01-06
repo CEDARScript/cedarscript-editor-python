@@ -183,6 +183,10 @@ cedarscript --root ./my-project -f refactor.cedar
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
+## See Also
+
+- https://github.com/oraios/serena
+
 ## License
 
 This project is licensed under the MIT License.
